@@ -26,9 +26,6 @@
   environment.systemPackages = with pkgs; [
     pipewire
     wireplumber
-    pavucontrol
-    helvum
-    easyeffects
   ];
 
   hardware.alsa.enable = true;
