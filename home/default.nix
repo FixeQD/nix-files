@@ -5,6 +5,7 @@
     ./programs.nix
     ./theme.nix
     ./secrets.nix
+    ./secrets-keys.nix
     ./zed.nix
     ./dotfiles.nix
   ];
