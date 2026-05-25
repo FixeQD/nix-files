@@ -13,25 +13,59 @@ let
     CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
     CURRENT_INITRD="$BOOT_DIR/initrd-$TIMESTAMP"
 
-    # Validate inputs
+    # ─────────────────────────────────────────────────────────────────────────
+    # Pre-flight validation
+    # ─────────────────────────────────────────────────────────────────────────
+
+    # Check required tools
+    for tool in jq efibootmgr sbctl date basename; do
+      if ! command -v "$tool" &>/dev/null; then
+        echo "ERROR: required tool not found: $tool"
+        exit 1
+      fi
+    done
+
+    # Check inputs
     [ -r "$BOOTSPEC" ] || { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
     [ -n "$DISK" ] || { echo "ERROR: boot device is empty"; exit 1; }
+    [ -n "$PART" ] || { echo "ERROR: partition number is empty"; exit 1; }
 
-    KERNEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernel'               "$BOOTSPEC")
-    INITRD=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".initrd'               "$BOOTSPEC")
+    # Check if disk exists
+    [ -b "$DISK" ] || { echo "ERROR: boot device not found: $DISK"; exit 1; }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Extract boot parameters
+    # ─────────────────────────────────────────────────────────────────────────
+
+    KERNEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernel' "$BOOTSPEC")
+    INITRD=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".initrd' "$BOOTSPEC")
     PARAMS=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernelParams | join(" ")' "$BOOTSPEC")
 
     [ -n "$KERNEL" ] || { echo "ERROR: kernel not found in boot.json"; exit 1; }
     [ -n "$INITRD" ] || { echo "ERROR: initrd not found in boot.json"; exit 1; }
+    [ -f "$KERNEL" ] || { echo "ERROR: kernel file not found: $KERNEL"; exit 1; }
+    [ -f "$INITRD" ] || { echo "ERROR: initrd file not found: $INITRD"; exit 1; }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Install kernel and initrd
+    # ─────────────────────────────────────────────────────────────────────────
 
     mkdir -p "$BOOT_DIR"
 
-    # Install current kernel and initrd with timestamp
     echo "==> Installing kernel and initrd (timestamp: $TIMESTAMP)"
-    install -m 0644 "$KERNEL" "$CURRENT_KERNEL"
-    install -m 0644 "$INITRD" "$CURRENT_INITRD"
+    if ! install -m 0644 "$KERNEL" "$CURRENT_KERNEL"; then
+      echo "ERROR: Failed to install kernel"
+      exit 1
+    fi
+    if ! install -m 0644 "$INITRD" "$CURRENT_INITRD"; then
+      echo "ERROR: Failed to install initrd"
+      exit 1
+    fi
 
-    # Sign if Secure Boot keys exist
+    # ─────────────────────────────────────────────────────────────────────────
+    # Sign kernel if Secure Boot is enabled
+    # ─────────────────────────────────────────────────────────────────────────
+
     if [ -d /etc/secureboot/keys ]; then
       echo "==> sbctl: signing kernel"
       if ! ${pkgs.sbctl}/bin/sbctl sign "$CURRENT_KERNEL"; then
@@ -39,7 +73,10 @@ let
       fi
     fi
 
-    # Rotate old "previous" entry: current -> previous, then cleanup
+    # ─────────────────────────────────────────────────────────────────────────
+    # Manage boot entry generations
+    # ─────────────────────────────────────────────────────────────────────────
+
     echo "==> Managing boot entry generations"
 
     # Find and remove old "Finix (previous)" entry + its orphaned files
@@ -48,13 +85,15 @@ let
 
     if [ -n "$PREV" ]; then
       echo "==> Removing old previous entry ($PREV)"
-      ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$PREV" -B || true
+      if ! ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$PREV" -B; then
+        echo "WARNING: Failed to remove old boot entry, but continuing"
+      fi
 
       # Clean up orphaned kernel/initrd files
       for kernel in "$BOOT_DIR"/kernel-*.efi; do
         if [ -f "$kernel" ] && [ "$kernel" != "$CURRENT_KERNEL" ]; then
+          echo "==> Cleaning up: $kernel"
           rm -f "$kernel"
-          # Also remove corresponding initrd
           KBASE=$(basename "$kernel" .efi)
           rm -f "$BOOT_DIR/$KBASE"
         fi
@@ -67,10 +106,15 @@ let
 
     if [ -n "$CURRENT" ]; then
       echo "==> Promoting current entry to previous: $CURRENT"
-      ${pkgs.efibootmgr}/bin/efibootmgr -b "$CURRENT" -L "Finix (previous)" || true
+      if ! ${pkgs.efibootmgr}/bin/efibootmgr -b "$CURRENT" -L "Finix (previous)"; then
+        echo "WARNING: Failed to rename boot entry, but continuing"
+      fi
     fi
 
-    # Create new current EFISTUB entry
+    # ─────────────────────────────────────────────────────────────────────────
+    # Create new primary boot entry
+    # ─────────────────────────────────────────────────────────────────────────
+
     echo "==> Creating new primary entry ($DISK, partition $PART)"
     if ! ${pkgs.efibootmgr}/bin/efibootmgr \
       --quiet \
@@ -81,6 +125,7 @@ let
       --loader '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
       --unicode "initrd=\EFI\nixos\initrd-$TIMESTAMP $PARAMS"; then
       echo "ERROR: Failed to create boot entry!"
+      echo "This is critical. Boot may not work."
       exit 1
     fi
 
