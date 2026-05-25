@@ -1,14 +1,24 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 let
+  bootDevice = config.disko.devices.disk.main.device;
   efistubHook = pkgs.writeShellScript "efistub-install" ''
     set -euo pipefail
 
     BOOTSPEC="$1/boot.json"
+    DISK="${bootDevice}"
+    PART="1"
+
+    # Validate inputs
+    [ -r "$BOOTSPEC" ] || { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
+    [ -n "$DISK" ] || { echo "ERROR: boot device is empty"; exit 1; }
 
     KERNEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernel'               "$BOOTSPEC")
     INITRD=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".initrd'               "$BOOTSPEC")
     PARAMS=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernelParams | join(" ")' "$BOOTSPEC")
+
+    [ -n "$KERNEL" ] || { echo "ERROR: kernel not found in boot.json"; exit 1; }
+    [ -n "$INITRD" ] || { echo "ERROR: initrd not found in boot.json"; exit 1; }
 
     mkdir -p /boot/EFI/nixos
 
@@ -24,14 +34,18 @@ let
     # Usuń stary wpis Finix z efibootmgr
     OLD=$(${pkgs.efibootmgr}/bin/efibootmgr \
       | grep -oP "(?<=Boot)[0-9A-F]+(?=\* Finix)" || true)
-    [ -n "$OLD" ] && ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$OLD" -B
+    if [ -n "$OLD" ]; then
+      echo "==> efibootmgr: removing old Finix entry ($OLD)"
+      ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$OLD" -B
+    fi
 
     # Utwórz nowy wpis EFISTUB
+    echo "==> efibootmgr: creating new entry ($DISK, partition $PART)"
     ${pkgs.efibootmgr}/bin/efibootmgr \
       --quiet \
       --create \
-      --disk /dev/nvme0n1 \
-      --part 1 \
+      --disk "$DISK" \
+      --part "$PART" \
       --label "Finix" \
       --loader '\EFI\nixos\kernel.efi' \
       --unicode "initrd=\EFI\nixos\initrd $PARAMS"
