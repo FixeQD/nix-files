@@ -1,0 +1,23 @@
+/* ~/.config/rofi/config.rasi */
+
+configuration {
+    modi:                       "drun,run,filebrowser,window";
+    show-icons:                 true;
+    icon-theme:                 "Papirus-Dark";
+    terminal:                   "ghostty";
+    drun-display-format:        "{name}";
+    window-format:              "{w} · {c} · {t}";
+    font:                       "JetBrainsMono Nerd Font 13";
+    scroll-method:              0;
+    disable-history:            false;
+    hover-select:               false;
+    me-select-entry:            "";
+    me-accept-entry:            "MousePrimary";
+    display-drun:               "  Apps";
+    display-run:                "  Run";
+    display-filebrowser:        "  Files";
+    display-window:             "  Windows";
+    kb-cancel:                  "Escape,Super+space";
+}
+
+@theme "~/.config/rofi/theme.rasi"

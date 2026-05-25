@@ -19,8 +19,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    dotfiles.url = "github:FixeQD/dotfiles";
-
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -37,7 +35,7 @@
     };
   };
 
-  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, dotfiles, zen-browser, anyrun, ... }:
+  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, anyrun, ... }:
   let
     system = "x86_64-linux";
     pkgs   = nixpkgs.legacyPackages.${system};
@@ -45,7 +43,7 @@
   {
     nixosConfigurations.hp-zbook = nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = { inherit zen-browser anyrun dotfiles sops-nix; };
+      specialArgs = { inherit zen-browser anyrun sops-nix; };
       modules = [
         finix.nixosModules.default
         disko.nixosModules.disko

@@ -1,0 +1,493 @@
+@define-color base       #1e1e2e;
+@define-color mantle     #181825;
+@define-color crust      #11111b;
+@define-color surface0   #313244;
+@define-color surface1   #45475a;
+@define-color surface2   #585b70;
+@define-color overlay0   #6c7086;
+@define-color overlay1   #7f849c;
+@define-color subtext0   #a6adc8;
+@define-color subtext1   #bac2de;
+@define-color text       #cdd6f4;
+@define-color lavender   #b4befe;
+@define-color blue       #89b4fa;
+@define-color sapphire   #74c7ec;
+@define-color sky        #89dceb;
+@define-color teal       #94e2d5;
+@define-color green      #a6e3a1;
+@define-color yellow     #f9e2af;
+@define-color peach      #fab387;
+@define-color maroon     #eba0ac;
+@define-color red        #f38ba8;
+@define-color mauve      #cba6f7;
+@define-color pink       #f5c2e7;
+
+* {
+    font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF", monospace;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    border-radius: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+window#waybar {
+    background: transparent;
+    color: @text;
+}
+
+window#waybar.hidden {
+    opacity: 0;
+}
+
+tooltip {
+    background: @mantle;
+    border: 1px solid alpha(@mauve, 0.5);
+    border-radius: 12px;
+    color: @text;
+    padding: 8px 12px;
+}
+
+tooltip label {
+    color: @text;
+}
+
+.modules-left {
+    background: alpha(@base, 0.85);
+    border: 1px solid alpha(@mauve, 0.25);
+    border-radius: 12px;
+    padding: 0 6px;
+    margin: 0 2px;
+}
+
+.modules-center {
+    background: alpha(@base, 0.85);
+    border: 1px solid alpha(@blue, 0.3);
+    border-radius: 12px;
+    padding: 0 6px;
+    margin: 0 2px;
+}
+
+.modules-right {
+    background: alpha(@base, 0.85);
+    border: 1px solid alpha(@sapphire, 0.2);
+    border-radius: 12px;
+    padding: 0 6px;
+    margin: 0 2px;
+}
+
+.modules-left > widget > *,
+.modules-center > widget > *,
+.modules-right > widget > * {
+    padding: 0 5px;
+}
+
+#custom-os {
+    background: alpha(@mauve, 0.18);
+    color: @mauve;
+    font-size: 16px;
+    padding: 0 13px;
+    border-radius: 9px;
+    margin: 4px 3px 4px 2px;
+    border: 1px solid alpha(@mauve, 0.45);
+    transition: all 200ms ease;
+}
+
+#custom-os:hover {
+    background: alpha(@mauve, 0.3);
+    color: @pink;
+    border-color: alpha(@pink, 0.6);
+}
+
+#workspaces {
+    padding: 0 2px;
+}
+
+#workspaces button {
+    all: unset;
+    color: @surface2;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 6px;
+    margin: 4px 1px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: all 160ms ease;
+}
+
+#workspaces button:hover {
+    color: @lavender;
+    background: alpha(@lavender, 0.1);
+    border-color: alpha(@lavender, 0.4);
+}
+
+#workspaces button.empty {
+    color: @surface1;
+    opacity: 0.35;
+    padding: 2px 5px;
+}
+
+#workspaces button.populated {
+    color: @subtext0;
+    background: alpha(@blue, 0.1);
+    border-color: alpha(@blue, 0.3);
+    font-weight: 600;
+    padding: 2px 8px;
+}
+
+#workspaces button.active {
+    color: @crust;
+    background: linear-gradient(90deg, alpha(@mauve, 0.9), alpha(@blue, 0.8));
+    border-color: alpha(@mauve, 0.8);
+    font-weight: 700;
+    padding: 2px 9px;
+}
+
+#workspaces button.urgent {
+    color: @crust;
+    background: alpha(@red, 0.85);
+    border-color: @red;
+    font-weight: 700;
+}
+
+#window {
+    color: @overlay1;
+    font-size: 11px;
+    padding: 0 10px;
+    transition: color 150ms ease;
+}
+
+#window:hover {
+    color: @subtext0;
+}
+
+window#waybar.empty #window {
+    opacity: 0;
+}
+
+#clock {
+    color: @blue;
+    font-weight: 800;
+    font-size: 14px;
+    padding: 0 14px;
+    transition: all 180ms ease;
+}
+
+#clock:hover {
+    color: @lavender;
+}
+
+#custom-greeting {
+    color: @subtext0;
+    font-size: 11px;
+    font-style: italic;
+    padding: 0 8px;
+    transition: color 200ms ease;
+}
+
+#custom-weather {
+    color: @yellow;
+    font-size: 12px;
+    padding: 0 8px;
+    transition: color 200ms ease;
+}
+
+#custom-weather:hover {
+    color: @peach;
+}
+
+#custom-sep-left,
+#custom-sep-right {
+    color: @surface1;
+    font-size: 14px;
+    padding: 0 2px;
+    margin: 0;
+}
+
+.modules-right > widget > * {
+    border-radius: 7px;
+    margin: 4px 2px;
+    padding: 1px 8px;
+    border: 1px solid transparent;
+    transition: all 160ms ease;
+}
+
+#custom-music {
+    background: alpha(@green, 0.12);
+    color: @green;
+    border-color: alpha(@green, 0.3);
+    padding: 1px 10px;
+    font-size: 11px;
+}
+
+#custom-music:hover {
+    background: alpha(@green, 0.22);
+    color: @teal;
+    border-color: alpha(@teal, 0.55);
+}
+
+#cpu {
+    background: alpha(@sapphire, 0.12);
+    color: @sapphire;
+    border-color: alpha(@sapphire, 0.3);
+}
+
+#cpu:hover {
+    background: alpha(@sapphire, 0.22);
+    color: @blue;
+    border-color: alpha(@blue, 0.55);
+}
+
+#cpu.warning {
+    background: alpha(@yellow, 0.15);
+    color: @yellow;
+    border-color: alpha(@yellow, 0.4);
+}
+
+#cpu.critical {
+    background: alpha(@red, 0.18);
+    color: @red;
+    border-color: alpha(@red, 0.5);
+}
+
+#memory {
+    background: alpha(@mauve, 0.12);
+    color: @mauve;
+    border-color: alpha(@mauve, 0.3);
+}
+
+#memory:hover {
+    background: alpha(@mauve, 0.22);
+    color: @pink;
+    border-color: alpha(@pink, 0.55);
+}
+
+#memory.warning {
+    background: alpha(@yellow, 0.15);
+    color: @yellow;
+    border-color: alpha(@yellow, 0.4);
+}
+
+#memory.critical {
+    background: alpha(@red, 0.18);
+    color: @red;
+    border-color: alpha(@red, 0.5);
+}
+
+#temperature {
+    background: alpha(@peach, 0.12);
+    color: @peach;
+    border-color: alpha(@peach, 0.3);
+}
+
+#temperature:hover {
+    background: alpha(@peach, 0.22);
+    color: @maroon;
+    border-color: alpha(@maroon, 0.55);
+}
+
+#temperature.critical {
+    background: alpha(@red, 0.2);
+    color: @red;
+    border-color: alpha(@red, 0.6);
+}
+
+#network {
+    background: alpha(@sky, 0.12);
+    color: @sky;
+    border-color: alpha(@sky, 0.28);
+}
+
+#network:hover {
+    background: alpha(@sky, 0.22);
+    color: @teal;
+    border-color: alpha(@teal, 0.55);
+}
+
+#network.disconnected {
+    background: alpha(@overlay0, 0.1);
+    color: @overlay0;
+    border-color: alpha(@overlay0, 0.2);
+}
+
+#bluetooth {
+    background: alpha(@blue, 0.1);
+    color: @overlay1;
+    border-color: alpha(@surface1, 0.3);
+}
+
+#bluetooth.connected {
+    background: alpha(@blue, 0.15);
+    color: @blue;
+    border-color: alpha(@blue, 0.4);
+}
+
+#bluetooth:hover {
+    background: alpha(@blue, 0.22);
+    color: @sapphire;
+    border-color: alpha(@sapphire, 0.55);
+}
+
+#pulseaudio {
+    background: alpha(@mauve, 0.12);
+    color: @mauve;
+    border-color: alpha(@mauve, 0.3);
+}
+
+#pulseaudio:hover {
+    background: alpha(@mauve, 0.22);
+    color: @pink;
+    border-color: alpha(@pink, 0.55);
+}
+
+#pulseaudio.muted {
+    background: alpha(@overlay0, 0.08);
+    color: @overlay0;
+    border-color: alpha(@overlay0, 0.15);
+}
+
+#battery {
+    background: alpha(@green, 0.12);
+    color: @green;
+    border-color: alpha(@green, 0.3);
+}
+
+#battery:hover {
+    background: alpha(@green, 0.22);
+}
+
+#battery.warning {
+    background: alpha(@yellow, 0.15);
+    color: @yellow;
+    border-color: alpha(@yellow, 0.4);
+}
+
+#battery.critical {
+    background: alpha(@red, 0.18);
+    color: @red;
+    border-color: alpha(@red, 0.5);
+}
+
+#battery.charging,
+#battery.plugged {
+    background: alpha(@sky, 0.14);
+    color: @sky;
+    border-color: alpha(@sky, 0.4);
+}
+
+#battery.full {
+    background: alpha(@teal, 0.14);
+    color: @teal;
+    border-color: alpha(@teal, 0.4);
+}
+
+#custom-notification {
+    color: @subtext0;
+    font-size: 14px;
+    padding: 0 6px;
+    transition: color 200ms ease;
+}
+
+#custom-notification.notification {
+    color: @peach;
+}
+
+#custom-notification.dnd-notification,
+#custom-notification.dnd-none {
+    color: @overlay0;
+}
+
+#custom-notification:hover {
+    color: @lavender;
+}
+
+#custom-power {
+    background: alpha(@red, 0.14);
+    color: @red;
+    border-color: alpha(@red, 0.35);
+    font-size: 13px;
+    padding: 1px 12px 1px 8px;
+    margin-right: 2px;
+}
+
+#custom-power:hover {
+    background: alpha(@red, 0.28);
+    color: @maroon;
+    border-color: alpha(@maroon, 0.6);
+}
+
+#idle_inhibitor {
+    color: @overlay1;
+    font-size: 15px;
+    padding: 0 6px;
+    border-radius: 7px;
+    margin: 4px 2px;
+    transition: all 200ms ease;
+}
+
+#idle_inhibitor.activated {
+    color: @yellow;
+    background: alpha(@yellow, 0.12);
+    border: 1px solid alpha(@yellow, 0.35);
+}
+
+#idle_inhibitor:hover {
+    color: @text;
+}
+
+#custom-separator {
+    color: @surface1;
+    font-size: 14px;
+    padding: 0 4px;
+}
+
+#custom-wallpaper {
+    color: @overlay1;
+    font-size: 15px;
+    padding: 0 6px;
+    border-radius: 7px;
+    margin: 4px 2px;
+    transition: all 200ms ease;
+}
+
+#custom-wallpaper:hover {
+    color: @lavender;
+    background: alpha(@lavender, 0.12);
+    border: 1px solid alpha(@lavender, 0.3);
+}
+
+#custom-colorpicker {
+    color: @overlay1;
+    font-size: 15px;
+    padding: 0 6px;
+    border-radius: 7px;
+    margin: 4px 2px;
+    transition: all 200ms ease;
+}
+
+#custom-colorpicker:hover {
+    color: @pink;
+    background: alpha(@pink, 0.12);
+    border: 1px solid alpha(@pink, 0.3);
+}
+
+#custom-greeting {
+    color: @overlay1;
+    font-size: 12px;
+    padding: 0 8px;
+}
+
+#custom-weather {
+    color: @sky;
+    font-size: 12px;
+    padding: 0 8px;
+}
+
+#custom-sep-left,
+#custom-sep-right {
+    color: @surface1;
+    font-size: 13px;
+    padding: 0 2px;
+}

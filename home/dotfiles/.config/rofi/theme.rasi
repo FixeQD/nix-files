@@ -1,0 +1,159 @@
+/* ~/.config/rofi/theme.rasi
+   Dark Vivid — spójny z waybar/swaync
+*/
+
+* {
+    /* Paleta */
+    bg0:        #0f1117;
+    bg1:        #161820;
+    bg2:        #1d1f2a;
+    bg3:        #252735;
+    border0:    #2a2d3e;
+    border1:    #363a52;
+    muted:      #4a4e6a;
+    subtle:     #6b7194;
+    text:       #c8cde8;
+    bright:     #e8ecff;
+    acc-purple: #a78bfa;
+    acc-blue:   #60a5fa;
+    acc-cyan:   #22d3ee;
+    acc-green:  #4ade80;
+    acc-red:    #f87171;
+
+    /* Defaults */
+    background-color:   transparent;
+    text-color:         @text;
+    border-color:       @border0;
+}
+
+/* ─── OKNO ─────────────────────────────────── */
+window {
+    background-color:   @bg1;
+    border:             1px solid;
+    border-color:       @border0;
+    border-radius:      16px;
+    width:              600px;
+    padding:            0;
+}
+
+/* ─── MAINBOX ──────────────────────────────── */
+mainbox {
+    background-color:   transparent;
+    children:           [ inputbar, message, listview ];
+    spacing:            0;
+    padding:            12px;
+}
+
+/* ─── INPUT BAR ────────────────────────────── */
+inputbar {
+    background-color:   @bg2;
+    border:             1px solid;
+    border-color:       @border1;
+    border-radius:      10px;
+    padding:            10px 14px;
+    margin:             0 0 10px 0;
+    spacing:            10px;
+    children:           [ prompt, entry ];
+}
+
+prompt {
+    background-color:   transparent;
+    text-color:         @acc-purple;
+    font:               "JetBrainsMono Nerd Font Bold 13";
+}
+
+entry {
+    background-color:   transparent;
+    text-color:         @bright;
+    placeholder:        "Szukaj...";
+    placeholder-color:  @muted;
+    cursor:             text;
+    cursor-color:       @acc-purple;
+}
+
+/* ─── LISTA ────────────────────────────────── */
+listview {
+    background-color:   transparent;
+    columns:            1;
+    lines:              8;
+    spacing:            3px;
+    scrollbar:          false;
+    fixed-height:       false;
+    border:             0;
+}
+
+/* ─── ELEMENT ──────────────────────────────── */
+element {
+    background-color:   transparent;
+    border-radius:      8px;
+    padding:            8px 10px;
+    spacing:            10px;
+    orientation:        horizontal;
+}
+
+element normal.normal,
+element alternate.normal {
+    background-color:   transparent;
+    text-color:         @text;
+}
+
+element selected.normal {
+    background-color:   #1e1440;
+    border:             1px solid;
+    border-color:       #5b3fa8;
+    text-color:         @bright;
+}
+
+element normal.urgent,
+element alternate.urgent {
+    text-color:         @acc-red;
+}
+
+element selected.urgent {
+    background-color:   #3d1a1a;
+    border:             1px solid;
+    border-color:       #7a3535;
+    text-color:         @acc-red;
+}
+
+element normal.active,
+element alternate.active {
+    text-color:         @acc-cyan;
+}
+
+element selected.active {
+    background-color:   #0d2e33;
+    border:             1px solid;
+    border-color:       #116f7f;
+    text-color:         @acc-cyan;
+}
+
+/* ─── IKONA ────────────────────────────────── */
+element-icon {
+    background-color:   transparent;
+    size:               28px;
+}
+
+/* ─── TEKST ────────────────────────────────── */
+element-text {
+    background-color:   transparent;
+    text-color:         inherit;
+    highlight:          bold underline #a78bfa;
+    vertical-align:     0.5;
+}
+
+/* ─── WIADOMOŚĆ ────────────────────────────── */
+message {
+    background-color:   @bg2;
+    border:             1px solid;
+    border-color:       @border0;
+    border-radius:      8px;
+    padding:            8px 12px;
+    margin:             0 0 8px 0;
+}
+
+textbox {
+    background-color:   transparent;
+    text-color:         @subtle;
+    font:               "JetBrainsMono Nerd Font 12";
+}

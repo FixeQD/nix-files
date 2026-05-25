@@ -1,0 +1,100 @@
+;; ================================================
+;; eww — Desktop Widgets
+;; Catppuccin Mocha
+;; ================================================
+
+(defpoll clock-time  :interval "1s"   "date '+%H:%M'")
+(defpoll clock-secs  :interval "1s"   "date '+%S'")
+(defpoll clock-date  :interval "60s"  "date '+%A, %-d %B %Y'")
+(defpoll greeting    :interval "300s" "~/.config/hypr/scripts/greeting.sh")
+(defpoll weather     :interval "900s" "~/.config/hypr/scripts/weather.sh")
+(defpoll cpu-val     :interval "3s"   "~/.config/eww/scripts/cpu.sh")
+(defpoll ram-val     :interval "5s"   "free | awk 'NR==2{printf \"%.0f\", $3*100/$2}'")
+(defpoll uptime-val  :interval "60s"  "uptime -p | sed 's/up //;s/ hours\\?/h/;s/ minutes\\?/m/;s/, / /'")
+(defpoll music-title :interval "2s"   "playerctl metadata title 2>/dev/null || echo ''")
+(defpoll music-artist :interval "2s"   "playerctl metadata artist 2>/dev/null || echo ''")
+(defpoll music-status :interval "2s"   "playerctl status 2>/dev/null || echo 'Stopped'")
+
+;; ── MAIN CLOCK WIDGET ────────────────────────────
+(defwidget clock-widget []
+  (box :class "card"
+       :orientation "v"
+       :space-evenly false
+       :spacing 0
+    ;; Greeting
+    (label :class "greeting" :text greeting :limit-width 30 :xalign 0.5)
+    ;; Zegar
+    (box :orientation "h" :space-evenly false :spacing 0 :halign "center"
+      (label :class "time-h" :text clock-time)
+      (label :class "time-s" :text ":${clock-secs}"))
+    ;; Data
+    (label :class "date" :text clock-date :xalign 0.5)
+    ;; Separator
+    (box :class "sep" :height 1)
+    ;; Pogoda
+    (label :class "weather" :text weather :xalign 0.5)
+    ;; Separator
+    (box :class "sep" :height 1)
+    ;; Stats
+    (box :class "stats-row"
+         :orientation "h"
+         :space-evenly true
+      ;; CPU
+      (box :orientation "v" :spacing 4 :space-evenly false :halign "center"
+        (label :class "stat-icon cpu-c" :text " CPU")
+        (scale :class "bar-cpu"
+               :min 0 :max 100 :value cpu-val
+               :active false :width 90)
+        (label :class "stat-val cpu-c" :text "${cpu-val}%"))
+      ;; RAM
+      (box :orientation "v" :spacing 4 :space-evenly false :halign "center"
+        (label :class "stat-icon ram-c" :text " RAM")
+        (scale :class "bar-ram"
+               :min 0 :max 100 :value ram-val
+               :active false :width 90)
+        (label :class "stat-val ram-c" :text "${ram-val}%"))
+      ;; Uptime
+      (box :orientation "v" :spacing 4 :space-evenly false :halign "center"
+        (label :class "stat-icon up-c" :text "󰅐 Uptime")
+        (box :height 10)
+        (label :class "stat-val up-c" :text uptime-val)))))
+
+;; ── MUSIC WIDGET ─────────────────────────────────
+(defwidget music-widget []
+  (box :class "music-card ${music-status == 'Playing' || music-status == 'Paused' ? '' : 'hidden'}"
+       :orientation "h"
+       :space-evenly false
+       :spacing 12
+    (label :class "music-icon ${music-status == 'Playing' ? 'playing' : 'paused'}"
+           :text "${music-status == 'Playing' ? '' : ''}")
+    (box :orientation "v" :spacing 2 :space-evenly false :hexpand true
+      (label :class "music-title" :text music-title  :limit-width 24 :xalign 0)
+      (label :class "music-artist":text music-artist :limit-width 24 :xalign 0))
+    (box :orientation "h" :spacing 6 :space-evenly false :valign "center"
+      (button :class "mbtn" :onclick "playerctl previous" "")
+      (button :class "mbtn play" :onclick "playerctl play-pause"
+              "${music-status == 'Playing' ? '' : ''}")
+      (button :class "mbtn" :onclick "playerctl next" ""))))
+
+;; ── WINDOWS ──────────────────────────────────────
+(defwindow desktop-center
+  :monitor 0
+  :geometry (geometry :x "50%"
+                      :y "50%"
+                      :width "380px"
+                      :anchor "center")
+  :stacking "background"
+  :exclusive false
+  :focusable false
+  (clock-widget))
+
+(defwindow desktop-music
+  :monitor 0
+  :geometry (geometry :x "24px"
+                      :y "24px"
+                      :width "340px"
+                      :anchor "bottom left")
+  :stacking "background"
+  :exclusive false
+  :focusable false
+  (music-widget))

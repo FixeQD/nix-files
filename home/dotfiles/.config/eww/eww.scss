@@ -1,0 +1,183 @@
+// ================================================
+// eww — Catppuccin Mocha | GTK-compatible
+// ================================================
+
+$base:     #1e1e2e;
+$surface0: #313244;
+$surface1: #45475a;
+$overlay0: #6c7086;
+$overlay1: #7f849c;
+$subtext0: #a6adc8;
+$text:     #cdd6f4;
+$lavender: #b4befe;
+$blue:     #89b4fa;
+$sapphire: #74c7ec;
+$teal:     #94e2d5;
+$green:    #a6e3a1;
+$yellow:   #f9e2af;
+$mauve:    #cba6f7;
+$pink:     #f5c2e7;
+
+* {
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  color: $text;
+}
+
+window {
+  background-color: transparent;
+}
+
+.card {
+  background-color: rgba(17, 17, 27, 0.72);
+  border-radius: 20px;
+  border: 1px solid rgba(203, 166, 247, 0.22);
+  padding: 28px 36px 24px;
+}
+
+.greeting {
+  color: rgba(166, 173, 200, 0.80);
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.time-h {
+  color: $text;
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -3px;
+}
+
+.time-s {
+  color: rgba(203, 166, 247, 0.50);
+  font-size: 34px;
+  font-weight: 700;
+  margin-top: 30px;
+}
+
+.date {
+  color: $lavender;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+.weather {
+  color: $yellow;
+  font-size: 13px;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+
+.sep {
+  background-color: rgba(69, 71, 90, 0.60);
+  min-height: 1px;
+}
+
+.stats-row {
+  margin-top: 14px;
+}
+
+.stat-icon {
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.stat-val {
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.cpu-c { color: $sapphire; }
+.ram-c { color: $mauve; }
+.up-c  { color: $overlay1; }
+
+scale {
+  min-height: 6px;
+
+  trough {
+    background-color: rgba(49, 50, 68, 0.90);
+    border-radius: 99px;
+    min-height: 5px;
+
+    highlight, progress {
+      border-radius: 99px;
+      min-height: 5px;
+    }
+  }
+
+  slider {
+    min-width: 0;
+    min-height: 0;
+    background: transparent;
+    border: none;
+  }
+}
+
+.bar-cpu trough highlight,
+.bar-cpu trough progress {
+  background-color: $sapphire;
+}
+
+.bar-ram trough highlight,
+.bar-ram trough progress {
+  background-color: $mauve;
+}
+
+.music-card {
+  background-color: rgba(17, 17, 27, 0.72);
+  border-radius: 16px;
+  border: 1px solid rgba(203, 166, 247, 0.22);
+  padding: 14px 18px;
+}
+
+.music-card.hidden {
+  background-color: transparent;
+  border-color: transparent;
+  padding: 0;
+  min-height: 0;
+}
+
+.music-icon {
+  font-size: 22px;
+}
+
+.music-icon.playing { color: $green; }
+.music-icon.paused  { color: $overlay1; }
+
+.music-title {
+  color: $text;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.music-artist {
+  color: $subtext0;
+  font-size: 12px;
+}
+
+.mbtn {
+  color: $overlay1;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.mbtn:hover {
+  color: $mauve;
+  background-color: rgba(203, 166, 247, 0.15);
+}
+
+.mbtn.play {
+  color: $green;
+  font-size: 18px;
+}
+
+.mbtn.play:hover {
+  color: $teal;
+  background-color: rgba(148, 226, 213, 0.15);
+}

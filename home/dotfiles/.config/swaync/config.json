@@ -1,0 +1,111 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ErikReider/SwayNotificationCenter/main/src/configSchema.json",
+  "positionX": "right",
+  "positionY": "top",
+  "layer": "overlay",
+  "layer-shell": true,
+  "cssPriority": "application",
+  "control-center-margin-top": 8,
+  "control-center-margin-bottom": 8,
+  "control-center-margin-right": 8,
+  "control-center-margin-left": 0,
+  "control-center-width": 380,
+  "control-center-height": 0,
+  "notification-icon-size": 42,
+  "notification-body-image-height": 100,
+  "notification-body-image-width": 200,
+  "notification-inline-replies": true,
+  "timeout": 5,
+  "timeout-low": 3,
+  "timeout-critical": 0,
+  "fit-to-screen": false,
+  "relative-timestamps": true,
+  "keyboard-shortcuts": true,
+  "image-visibility": "when-available",
+  "transition-time": 180,
+  "hide-on-clear": false,
+  "hide-on-action": true,
+  "script-fail-notify": false,
+  "widgets": [
+    "title",
+    "mpris",
+    "volume",
+    "backlight",
+    "buttons-grid",
+    "dnd",
+    "notifications"
+  ],
+  "widget-config": {
+    "title": {
+      "text": "󰂚  Centrum",
+      "clear-all-button": true,
+      "button-text": "󰆴  Wyczyść"
+    },
+    "mpris": {
+      "image-size": 72,
+      "image-radius": 10
+    },
+    "volume": {
+      "label": "󰕾",
+      "show-per-app": false
+    },
+    "backlight": {
+      "label": "󰃠"
+    },
+    "dnd": {
+      "text": "󰂛  Nie przeszkadzać"
+    },
+    "buttons-grid": {
+      "actions": [
+        {
+          "label": "  WiFi",
+          "type": "toggle",
+          "active": true,
+          "command": "sh -c 'if [ \"$SWAYNC_TOGGLE_STATE\" = true ]; then nmcli radio wifi on; else nmcli radio wifi off; fi'",
+          "update-command": "sh -c 'nmcli radio wifi | grep -q enabled && echo true || echo false'"
+        },
+        {
+          "label": "󰂯  Bluetooth",
+          "type": "toggle",
+          "active": false,
+          "command": "sh -c 'if [ \"$SWAYNC_TOGGLE_STATE\" = true ]; then bluetoothctl power on; else bluetoothctl power off; fi'",
+          "update-command": "sh -c 'bluetoothctl show | grep -q Powered: && echo true || echo false'"
+        },
+        {
+          "label": "󰝟  Wycisz",
+          "type": "toggle",
+          "active": false,
+          "command": "pamixer -t",
+          "update-command": "pamixer --get-mute"
+        },
+        {
+          "label": "󰖔  Noc",
+          "type": "toggle",
+          "active": false,
+          "command": "sh -c 'if [ \"$SWAYNC_TOGGLE_STATE\" = true ]; then hyprsunset -t 3500; else pkill hyprsunset; fi'",
+          "update-command": "sh -c 'pgrep -x hyprsunset > /dev/null && echo true || echo false'"
+        },
+        {
+          "label": "󰅌  Screenshot",
+          "command": "swaync-client -cp && sleep 0.2 && hyprshot -m region"
+        },
+        {
+          "label": "󰔛  Ekran",
+          "command": "swaync-client -cp && sleep 0.2 && hyprshot -m output"
+        },
+        {
+          "label": "  Ustawienia",
+          "command": "env XDG_CURRENT_DESKTOP=gnome gnome-control-center"
+        },
+        {
+          "label": "  Pliki",
+          "command": "dolphin"
+        }
+      ]
+    },
+    "notifications": {
+      "ignore-timeout": false,
+      "fit-to-screen": true
+    }
+  }
+}
