@@ -92,6 +92,7 @@
     wireguard-tools
     spicetify-cli
     fwupd
+    modprobed-db
 
     # ── Sieć ──────────────────────────────────────────────────────────────────
     openssh
