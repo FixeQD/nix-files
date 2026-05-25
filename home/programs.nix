@@ -4,6 +4,8 @@
     enable    = true;
     functions.fish_greeting = "fastfetch";
     shellInit = ''
+      set -gx GPG_TTY (tty)
+
       if test -r ${config.sops.secrets.gmail_client_id.path}
         set -gx GMAIL_CLIENT_ID     (cat ${config.sops.secrets.gmail_client_id.path})
         set -gx GMAIL_CLIENT_SECRET (cat ${config.sops.secrets.gmail_client_secret.path})
