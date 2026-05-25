@@ -37,7 +37,7 @@
     };
   };
 
-  outputs = { nixpkgs, finix, disko, home-manager, zen-browser, anyrun, ... }:
+  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, anyrun, ... }:
   let
     system = "x86_64-linux";
     pkgs   = nixpkgs.legacyPackages.${system};
@@ -50,6 +50,7 @@
         finix.nixosModules.default
         disko.nixosModules.disko
         home-manager.nixosModules.home-manager
+        sops-nix.nixosModules.sops
         ./hosts/hp-zbook/default.nix
       ];
     };
