@@ -30,11 +30,15 @@
       gtk-application-prefer-dark-theme = true;
       gtk-decoration-layout             = "icon:minimize,maximize,close";
       gtk-enable-animations             = true;
+      gtk-enable-input-method-menu      = true;
+      gtk-enable-mnemonics              = true;
     };
 
     gtk4.extraConfig = {
       gtk-application-prefer-dark-theme = true;
       gtk-decoration-layout             = "icon:minimize,maximize,close";
+      gtk-enable-input-method-menu      = true;
+      gtk-enable-mnemonics              = true;
     };
   };
 
