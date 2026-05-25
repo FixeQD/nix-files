@@ -1,4 +1,8 @@
 { config, ... }:
+
+let
+  trimNewline = str: builtins.replaceStrings [ "\n" ] [ "" ] str;
+in
 {
   programs.fish = {
     enable    = true;
@@ -18,9 +22,9 @@
   };
 
   programs.git = {
-    enable      = true;
-    userName    = "Paweł Sobczak";
-    userEmail   = "github@fixeq.qzz.io";
+    enable = true;
+    userName = trimNewline (builtins.readFile config.sops.secrets.git_user_name.path);
+    userEmail = trimNewline (builtins.readFile config.sops.secrets.git_user_email.path);
     extraConfig = {
       init.defaultBranch = "main";
       pull.rebase        = false;

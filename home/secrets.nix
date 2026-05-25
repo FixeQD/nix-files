@@ -12,6 +12,8 @@
       gmail_client_secret = {};
       hf_token            = {};
       nvidia_nim_api_key  = {};
+      git_user_name       = {};
+      git_user_email      = {};
     };
   };
 }
