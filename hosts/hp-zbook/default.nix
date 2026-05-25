@@ -1,4 +1,4 @@
-{ zen-browser, anyrun, ... }@inputs:
+{ zen-browser, anyrun, dotfiles, sops-nix, ... }:
 {
   imports = [
     ./hardware.nix
@@ -24,8 +24,8 @@
     useUserPackages = true;
     extraSpecialArgs = { inherit zen-browser anyrun; };
     sharedModules = [
-      inputs.self.inputs.dotfiles.homeManagerModules.default
-      inputs.self.inputs.sops-nix.homeManagerModules.sops
+      dotfiles.homeManagerModules.default
+      sops-nix.homeManagerModules.sops
     ];
     users.fixeq = import ../../home/default.nix;
   };

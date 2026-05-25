@@ -37,7 +37,7 @@
     };
   };
 
-  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, anyrun, ... }:
+  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, dotfiles, zen-browser, anyrun, ... }:
   let
     system = "x86_64-linux";
     pkgs   = nixpkgs.legacyPackages.${system};
@@ -45,7 +45,7 @@
   {
     nixosConfigurations.hp-zbook = nixpkgs.lib.nixosSystem {
       inherit system;
-      specialArgs = { inherit zen-browser anyrun; };
+      specialArgs = { inherit zen-browser anyrun dotfiles sops-nix; };
       modules = [
         finix.nixosModules.default
         disko.nixosModules.disko
