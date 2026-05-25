@@ -11,6 +11,7 @@
       gmail_client_id     = {};
       gmail_client_secret = {};
       hf_token            = {};
+      nvidia_nim_api_key  = {};
     };
   };
 }

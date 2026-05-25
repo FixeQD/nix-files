@@ -5,6 +5,7 @@
     ./programs.nix
     ./theme.nix
     ./secrets.nix
+    ./zed.nix
   ];
 
   home = {
