@@ -8,6 +8,10 @@ let
     BOOTSPEC="$1/boot.json"
     DISK="${bootDevice}"
     PART="1"
+    BOOT_DIR="/boot/EFI/nixos"
+    TIMESTAMP=$(${pkgs.coreutils}/bin/date +%s)
+    CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
+    CURRENT_INITRD="$BOOT_DIR/initrd-$TIMESTAMP"
 
     # Validate inputs
     [ -r "$BOOTSPEC" ] || { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
@@ -20,37 +24,69 @@ let
     [ -n "$KERNEL" ] || { echo "ERROR: kernel not found in boot.json"; exit 1; }
     [ -n "$INITRD" ] || { echo "ERROR: initrd not found in boot.json"; exit 1; }
 
-    mkdir -p /boot/EFI/nixos
+    mkdir -p "$BOOT_DIR"
 
-    install -m 0644 "$KERNEL" /boot/EFI/nixos/kernel.efi
-    install -m 0644 "$INITRD" /boot/EFI/nixos/initrd
+    # Install current kernel and initrd with timestamp
+    echo "==> Installing kernel and initrd (timestamp: $TIMESTAMP)"
+    install -m 0644 "$KERNEL" "$CURRENT_KERNEL"
+    install -m 0644 "$INITRD" "$CURRENT_INITRD"
 
-    # Podpisz jeśli klucze sbctl już istnieją (po sbctl create-keys)
+    # Sign if Secure Boot keys exist
     if [ -d /etc/secureboot/keys ]; then
-      echo "==> sbctl: signing kernel.efi"
-      ${pkgs.sbctl}/bin/sbctl sign /boot/EFI/nixos/kernel.efi
+      echo "==> sbctl: signing kernel"
+      if ! ${pkgs.sbctl}/bin/sbctl sign "$CURRENT_KERNEL"; then
+        echo "WARNING: sbctl signing failed, but continuing (Secure Boot may not work)"
+      fi
     fi
 
-    # Usuń stary wpis Finix z efibootmgr
-    OLD=$(${pkgs.efibootmgr}/bin/efibootmgr \
-      | grep -oP "(?<=Boot)[0-9A-F]+(?=\* Finix)" || true)
-    if [ -n "$OLD" ]; then
-      echo "==> efibootmgr: removing old Finix entry ($OLD)"
-      ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$OLD" -B
+    # Rotate old "previous" entry: current -> previous, then cleanup
+    echo "==> Managing boot entry generations"
+
+    # Find and remove old "Finix (previous)" entry + its orphaned files
+    PREV=$(${pkgs.efibootmgr}/bin/efibootmgr \
+      | grep -oP "(?<=Boot)[0-9A-F]+(?=\* Finix \(previous\))" || true)
+
+    if [ -n "$PREV" ]; then
+      echo "==> Removing old previous entry ($PREV)"
+      ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$PREV" -B || true
+
+      # Clean up orphaned kernel/initrd files
+      for kernel in "$BOOT_DIR"/kernel-*.efi; do
+        if [ -f "$kernel" ] && [ "$kernel" != "$CURRENT_KERNEL" ]; then
+          rm -f "$kernel"
+          # Also remove corresponding initrd
+          KBASE=$(basename "$kernel" .efi)
+          rm -f "$BOOT_DIR/$KBASE"
+        fi
+      done
     fi
 
-    # Utwórz nowy wpis EFISTUB
-    echo "==> efibootmgr: creating new entry ($DISK, partition $PART)"
-    ${pkgs.efibootmgr}/bin/efibootmgr \
+    # Rename current "Finix" to "Finix (previous)"
+    CURRENT=$(${pkgs.efibootmgr}/bin/efibootmgr \
+      | grep -oP "(?<=Boot)[0-9A-F]+(?=\* Finix)(?!\s\(previous\))" || true)
+
+    if [ -n "$CURRENT" ]; then
+      echo "==> Promoting current entry to previous: $CURRENT"
+      ${pkgs.efibootmgr}/bin/efibootmgr -b "$CURRENT" -L "Finix (previous)" || true
+    fi
+
+    # Create new current EFISTUB entry
+    echo "==> Creating new primary entry ($DISK, partition $PART)"
+    if ! ${pkgs.efibootmgr}/bin/efibootmgr \
       --quiet \
       --create \
       --disk "$DISK" \
       --part "$PART" \
       --label "Finix" \
-      --loader '\EFI\nixos\kernel.efi' \
-      --unicode "initrd=\EFI\nixos\initrd $PARAMS"
+      --loader '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
+      --unicode "initrd=\EFI\nixos\initrd-$TIMESTAMP $PARAMS"; then
+      echo "ERROR: Failed to create boot entry!"
+      exit 1
+    fi
 
-    echo "==> EFISTUB entry updated."
+    echo "==> Boot entries:"
+    ${pkgs.efibootmgr}/bin/efibootmgr | grep -E "Finix|^BootOrder"
+    echo "==> EFISTUB setup complete (rollback available via \"Finix (previous)\")"
   '';
 in
 {
@@ -98,6 +134,5 @@ in
     "rootfstype=btrfs"
     "zswap.enabled=0"
     "nvidia-drm.modeset=1"
-    # resume= ustawiane przez disko (resumeDevice = true w hardware.nix)
   ];
 }
