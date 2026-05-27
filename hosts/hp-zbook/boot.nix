@@ -7,7 +7,7 @@ let
 
     BOOTSPEC="$1/boot.json"
     DISK="${bootDevice}"
-    PART="1"
+    PART="1"  # ESP is always partition 1 per disko config
     BOOT_DIR="/boot/EFI/nixos"
     TIMESTAMP=$(${pkgs.coreutils}/bin/date +%s)
     CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
@@ -18,7 +18,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
 
     # Check required tools
-    for tool in jq efibootmgr sbctl date basename; do
+    for tool in date basename; do
       if ! command -v "$tool" &>/dev/null; then
         echo "ERROR: required tool not found: $tool"
         exit 1
@@ -81,7 +81,7 @@ let
 
     # Find and remove old "Finix (previous)" entry + its orphaned files
     PREV=$(${pkgs.efibootmgr}/bin/efibootmgr \
-      | grep -oP "(?<=Boot)[0-9A-F]+(?=\* Finix \(previous\))" || true)
+      | grep -oP "(?<=Boot)[0-9A-F]+(?=[\* ]+Finix \(previous\))" || true)
 
     if [ -n "$PREV" ]; then
       echo "==> Removing old previous entry ($PREV)"
@@ -94,15 +94,15 @@ let
         if [ -f "$kernel" ] && [ "$kernel" != "$CURRENT_KERNEL" ]; then
           echo "==> Cleaning up: $kernel"
           rm -f "$kernel"
-          KBASE=$(basename "$kernel" .efi)
-          rm -f "$BOOT_DIR/$KBASE"
+          TS=$(basename "$kernel" .efi | sed 's/kernel-//')
+          rm -f "$BOOT_DIR/initrd-$TS"
         fi
       done
     fi
 
     # Rename current "Finix" to "Finix (previous)"
     CURRENT=$(${pkgs.efibootmgr}/bin/efibootmgr \
-      | grep -oP "(?<=Boot)[0-9A-F]+(?=\* Finix)(?!\s\(previous\))" || true)
+      | grep -oP "(?<=Boot)[0-9A-F]+(?=[\* ]+Finix\b)(?!.*\(previous\))" || true)
 
     if [ -n "$CURRENT" ]; then
       echo "==> Promoting current entry to previous: $CURRENT"
@@ -168,7 +168,6 @@ in
   ];
 
   boot.extraModprobeConfig = ''
-    options nvidia-drm modeset=1
     options nvidia NVreg_PreserveVideoMemoryAllocations=1
   '';
 
