@@ -12,6 +12,7 @@
     ../../modules/audio.nix
     ../../modules/desktop.nix
     ../../modules/security.nix
+    ../../modules/pam.nix
     ../../modules/user.nix
     ../../modules/virt.nix
     ../../modules/bluetooth.nix
