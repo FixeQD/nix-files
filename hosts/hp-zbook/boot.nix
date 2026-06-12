@@ -4,13 +4,6 @@ let
   # The disk device - defined in hardware.nix
   bootDisk = config.disko.devices.disk.main.device;
 
-  # The ESP partition device - populated by disko
-  espDevice = config.fileSystems."/boot".device;
-
-  # Extract the partition number from the device path
-  _partSuffix = lib.removePrefix bootDisk espDevice;
-  espPartNum  = lib.removePrefix "p" _partSuffix;
-
   # The EFI System Partition mount point
   efiMount = config.boot.loader.efi.efiSysMountPoint;
 
@@ -20,9 +13,9 @@ let
   # Root subvolume name - disko automatically appends "subvol=<name>" to mountOptions
   _rootMountOpts = config.fileSystems."/".mountOptions;
   _rootSubvolOpt = lib.findFirst (lib.hasPrefix "subvol=") null _rootMountOpts;
-  rootSubvol     = if _rootSubvolOpt != null
-                   then lib.removePrefix "subvol=" _rootSubvolOpt
-                   else throw "boot.nix: subvol= not found in fileSystems.\"/\".mountOptions";
+  rootSubvol      = if _rootSubvolOpt != null
+                    then lib.removePrefix "subvol=" _rootSubvolOpt
+                    else throw "boot.nix: subvol= not found in fileSystems.\"/\".mountOptions";
 
   # ── EFISTUB install hook ───────────────────────────────────────────────────
 
@@ -31,17 +24,17 @@ let
 
     BOOTSPEC="$1/boot.json"
     DISK="${bootDisk}"
-    PART="${espPartNum}"
     BOOT_DIR="${efiMount}/EFI/nixos"
     TIMESTAMP=$(${pkgs.coreutils}/bin/date +%s)
     CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
     CURRENT_INITRD="$BOOT_DIR/initrd-$TIMESTAMP"
 
+    PART=$(${pkgs.util-linux}/bin/lsblk -no PARTNUM "$(${pkgs.coreutils}/bin/df --output=source ${efiMount} | tail -n1)")
+
     # ─────────────────────────────────────────────────────────────────────────
     # Pre-flight validation
     # ─────────────────────────────────────────────────────────────────────────
 
-    # Check required tools
     for tool in date basename; do
       if ! command -v "$tool" &>/dev/null; then
         echo "ERROR: required tool not found: $tool"
@@ -49,13 +42,10 @@ let
       fi
     done
 
-    # Check inputs
     [ -r "$BOOTSPEC" ] || { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
     [ -n "$DISK" ]     || { echo "ERROR: boot device is empty"; exit 1; }
     [ -n "$PART" ]     || { echo "ERROR: partition number is empty"; exit 1; }
-
-    # Check if disk exists
-    [ -b "$DISK" ] || { echo "ERROR: boot device not found: $DISK"; exit 1; }
+    [ -b "$DISK" ]     || { echo "ERROR: boot device not found: $DISK"; exit 1; }
 
     # ─────────────────────────────────────────────────────────────────────────
     # Extract boot parameters
@@ -103,7 +93,13 @@ let
 
     echo "==> Managing boot entry generations"
 
-    # Find and remove old "Finix (previous)" entry + its orphaned files
+    ACTIVE_KERNEL_TS=$(${pkgs.efibootmgr}/bin/efibootmgr -v \
+      | grep "Finix" \
+      | grep -oP "kernel-[0-9]+" \
+      | sed 's/kernel-//' \
+      | sort -n \
+      | tail -n1 || true)
+
     PREV=$(${pkgs.efibootmgr}/bin/efibootmgr \
       | grep -oP "(?<=Boot)[0-9A-F]+(?=[\* ]+Finix \(previous\))" || true)
 
@@ -112,17 +108,18 @@ let
       if ! ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$PREV" -B; then
         echo "WARNING: Failed to remove old boot entry, but continuing"
       fi
+    fi
 
-      # Clean up orphaned kernel/initrd files
-      for kernel in "$BOOT_DIR"/kernel-*.efi; do
-        if [ -f "$kernel" ] && [ "$kernel" != "$CURRENT_KERNEL" ]; then
-          echo "==> Cleaning up: $kernel"
-          rm -f "$kernel"
-          TS=$(basename "$kernel" .efi | sed 's/kernel-//')
+    for kernel_file in "$BOOT_DIR"/kernel-*.efi; do
+      if [ -f "$kernel_file" ] && [ "$kernel_file" != "$CURRENT_KERNEL" ]; then
+        TS=$(basename "$kernel_file" .efi | sed 's/kernel-//')
+        if [ "$TS" != "$ACTIVE_KERNEL_TS" ]; then
+          echo "==> Cleaning up orphaned file: $kernel_file"
+          rm -f "$kernel_file"
           rm -f "$BOOT_DIR/initrd-$TS"
         fi
-      done
-    fi
+      fi
+    done
 
     # Rename current "Finix" to "Finix (previous)"
     CURRENT=$(${pkgs.efibootmgr}/bin/efibootmgr \
@@ -149,7 +146,6 @@ let
       --loader '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
       --unicode "initrd=\EFI\nixos\initrd-$TIMESTAMP $PARAMS"; then
       echo "ERROR: Failed to create boot entry!"
-      echo "This is critical. Boot may not work."
       exit 1
     fi
 
