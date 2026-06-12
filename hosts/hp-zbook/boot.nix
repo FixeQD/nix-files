@@ -1,14 +1,38 @@
-{ pkgs, config, ... }:
+{ pkgs, config, lib, ... }:
 
 let
-  bootDevice = config.disko.devices.disk.main.device;
+  # The disk device - defined in hardware.nix
+  bootDisk = config.disko.devices.disk.main.device;
+
+  # The ESP partition device - populated by disko
+  espDevice = config.fileSystems."/boot".device;
+
+  # Extract the partition number from the device path
+  _partSuffix = lib.removePrefix bootDisk espDevice;
+  espPartNum  = lib.removePrefix "p" _partSuffix;
+
+  # The EFI System Partition mount point
+  efiMount = config.boot.loader.efi.efiSysMountPoint;
+
+  # Root filesystem type - populated by disko
+  rootFsType = config.fileSystems."/".fsType;
+
+  # Root subvolume name - disko automatically appends "subvol=<name>" to mountOptions
+  _rootMountOpts = config.fileSystems."/".mountOptions;
+  _rootSubvolOpt = lib.findFirst (lib.hasPrefix "subvol=") null _rootMountOpts;
+  rootSubvol     = if _rootSubvolOpt != null
+                   then lib.removePrefix "subvol=" _rootSubvolOpt
+                   else throw "boot.nix: subvol= not found in fileSystems.\"/\".mountOptions";
+
+  # ── EFISTUB install hook ───────────────────────────────────────────────────
+
   efistubHook = pkgs.writeShellScript "efistub-install" ''
     set -euo pipefail
 
     BOOTSPEC="$1/boot.json"
-    DISK="${bootDevice}"
-    PART="1"  # ESP is always partition 1 per disko config
-    BOOT_DIR="/boot/EFI/nixos"
+    DISK="${bootDisk}"
+    PART="${espPartNum}"
+    BOOT_DIR="${efiMount}/EFI/nixos"
     TIMESTAMP=$(${pkgs.coreutils}/bin/date +%s)
     CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
     CURRENT_INITRD="$BOOT_DIR/initrd-$TIMESTAMP"
@@ -27,8 +51,8 @@ let
 
     # Check inputs
     [ -r "$BOOTSPEC" ] || { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
-    [ -n "$DISK" ] || { echo "ERROR: boot device is empty"; exit 1; }
-    [ -n "$PART" ] || { echo "ERROR: partition number is empty"; exit 1; }
+    [ -n "$DISK" ]     || { echo "ERROR: boot device is empty"; exit 1; }
+    [ -n "$PART" ]     || { echo "ERROR: partition number is empty"; exit 1; }
 
     # Check if disk exists
     [ -b "$DISK" ] || { echo "ERROR: boot device not found: $DISK"; exit 1; }
@@ -174,8 +198,8 @@ in
   boot.kernelParams = [
     "quiet"
     "loglevel=3"
-    "rootflags=subvol=@"
-    "rootfstype=btrfs"
+    "rootflags=subvol=${rootSubvol}"
+    "rootfstype=${rootFsType}"
     "zswap.enabled=0"
     "nvidia-drm.modeset=1"
   ];
