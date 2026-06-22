@@ -1,5 +1,7 @@
-{ pkgs, config, ... }:
+{ pkgs, lib, config, ... }:
+with lib;
 let
+  cfg = config.modules.yggdrasil;
   homeDir = config.users.users.fixeq.home;
   yggdrasilConfig = builtins.toJSON {
     PrivateKeyPath = "${homeDir}/.config/yggdrasil/yggdrasil.key";
@@ -32,24 +34,28 @@ let
   };
 in
 {
-  environment.etc."yggdrasil.conf".text = yggdrasilConfig;
+  options.modules.yggdrasil.enable = mkEnableOption "Yggdrasil mesh network";
 
-  environment.systemPackages = with pkgs; [
-    yggdrasil
-    jq
-  ];
+  config = mkIf cfg.enable {
+    environment.etc."yggdrasil.conf".text = yggdrasilConfig;
 
-  finit.services.yggdrasil = {
-    description = "Yggdrasil Network";
-    runlevels = "2345";
-    conditions = [ "service/syslogd/ready" ];
-    command = ''
-      set -euo pipefail
-      umask 0077
-      PW=$(${pkgs.coreutils}/bin/cat "${homeDir}/.config/yggdrasil/multicast_password")
-      ${pkgs.jq}/bin/jq --arg pw "$PW" '.MulticastInterfaces[0].Password = $pw' \
-        /etc/yggdrasil.conf > /run/yggdrasil.conf \
-      && exec ${pkgs.yggdrasil}/bin/yggdrasil -useconffile /run/yggdrasil.conf
-    '';
+    environment.systemPackages = with pkgs; [
+      yggdrasil
+      jq
+    ];
+
+    finit.services.yggdrasil = {
+      description = "Yggdrasil Network";
+      runlevels = "2345";
+      conditions = [ "service/syslogd/ready" ];
+      command = ''
+        set -euo pipefail
+        umask 0077
+        PW=$(${pkgs.coreutils}/bin/cat "${homeDir}/.config/yggdrasil/multicast_password")
+        ${pkgs.jq}/bin/jq --arg pw "$PW" '.MulticastInterfaces[0].Password = $pw' \
+          /etc/yggdrasil.conf > /run/yggdrasil.conf \
+        && exec ${pkgs.yggdrasil}/bin/yggdrasil -useconffile /run/yggdrasil.conf
+      '';
+    };
   };
 }

@@ -1,56 +1,56 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
+with lib;
+let cfg = config.modules.base; in
 {
-  hardware.enableRedistributableFirmware = true;
-  hardware.cpu.intel.updateMicrocode = true;
+  options.modules.base.enable = mkEnableOption "core packages and Nix settings";
 
-  environment.systemPackages = with pkgs; [
-    # core
-    btrfs-progs
-    util-linux
-    coreutils
-    wget
-    curl
-    git
-    neovim
-    man-pages
-    less
-    # monitoring
-    btop
-    fastfetch
-    usbutils
-    pciutils
-    lshw
-    # tools
-    ripgrep
-    fd
-    bat
-    eza
-    tree
-    tokei
-    fwupd
-    # shell
-    fish
-    starship
-    # terminal
-    ghostty
-    # nix
-    nixd
-  ];
+  config = mkIf cfg.enable {
+    hardware.enableRedistributableFirmware = true;
+    hardware.cpu.intel.updateMicrocode = true;
 
-  programs.fish.enable = true;
-  users.defaultUserShell = pkgs.fish;
+    environment.systemPackages = with pkgs; [
+      btrfs-progs
+      util-linux
+      coreutils
+      wget
+      curl
+      git
+      neovim
+      man-pages
+      less
+      btop
+      fastfetch
+      usbutils
+      pciutils
+      lshw
+      ripgrep
+      fd
+      bat
+      eza
+      tree
+      tokei
+      fwupd
+      fish
+      starship
+      ghostty
+      nixd
+    ];
 
-  nix = {
-    settings = {
-      experimental-features  = [ "nix-command" "flakes" ];
-      auto-optimise-store    = true;
-      warn-dirty             = false;
-      max-jobs               = "auto";
-    };
-    gc = {
-      automatic = true;
-      dates     = "monthly";
-      options   = "--delete-older-than 30d";
+    programs.fish.enable = true;
+    users.defaultUserShell = pkgs.fish;
+
+    nix = {
+      settings = {
+        experimental-features  = [ "nix-command" "flakes" ];
+        auto-optimise-store    = true;
+        warn-dirty             = false;
+        max-jobs               = "auto";
+      };
+      gc = {
+        automatic = true;
+        dates     = "monthly";
+        options   = "--delete-older-than 30d";
+      };
     };
   };
 }

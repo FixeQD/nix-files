@@ -21,6 +21,23 @@
 
   networking.hostName = "HP-ZBook";
 
+  modules = {
+    audio.enable = true;
+    base.enable = true;
+    bluetooth.enable = true;
+    cron.enable = true;
+    desktop.enable = true;
+    locale.enable = true;
+    network.enable = true;
+    pam.enable = true;
+    performance.enable = true;
+    security.enable = true;
+    user.enable = true;
+    virt.enable = true;
+    yggdrasil.enable = true;
+    zram.enable = true;
+  };
+
   home-manager = {
     useGlobalPkgs   = true;
     useUserPackages = true;

@@ -1,21 +1,27 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
+with lib;
+let cfg = config.modules.bluetooth; in
 {
-  hardware.bluetooth = {
-    enable      = true;
-    powerOnBoot = false;
-  };
+  options.modules.bluetooth.enable = mkEnableOption "Bluetooth daemon";
 
-  finit.services.bluetoothd = {
-    description = "Bluetooth daemon";
-    runlevels   = "2345";
-    conditions  = [ "service/syslogd/ready" ];
-    command     = "${pkgs.bluez}/bin/bluetoothd -n";
-    notify      = "systemd";
-  };
+  config = mkIf cfg.enable {
+    hardware.bluetooth = {
+      enable      = true;
+      powerOnBoot = false;
+    };
 
-  environment.systemPackages = with pkgs; [
-    bluez
-    bluez-utils
-    blueman
-  ];
+    finit.services.bluetoothd = {
+      description = "Bluetooth daemon";
+      runlevels   = "2345";
+      conditions  = [ "service/syslogd/ready" ];
+      command     = "${pkgs.bluez}/bin/bluetoothd -n";
+      notify      = "systemd";
+    };
+
+    environment.systemPackages = with pkgs; [
+      bluez
+      bluez-utils
+      blueman
+    ];
+  };
 }

@@ -1,19 +1,25 @@
-{ pkgs, ... }:
+{ pkgs, lib, config, ... }:
+with lib;
+let cfg = config.modules.performance; in
 {
-  boot.kernel.sysctl = {
-    "vm.swappiness"                  = 180;
-    "vm.page-cluster"                = 0;
-    "vm.dirty_background_bytes"      = 67108864;   # 64M
-    "vm.dirty_bytes"                 = 268435456;  # 256M
-    "vm.dirty_expire_centisecs"      = 3000;
-    "vm.dirty_writeback_centisecs"   = 1500;
+  options.modules.performance.enable = mkEnableOption "sysctl tweaks and NVMe scheduler";
+
+  config = mkIf cfg.enable {
+    boot.kernel.sysctl = {
+      "vm.swappiness"                  = 180;
+      "vm.page-cluster"                = 0;
+      "vm.dirty_background_bytes"      = 67108864;
+      "vm.dirty_bytes"                 = 268435456;
+      "vm.dirty_expire_centisecs"      = 3000;
+      "vm.dirty_writeback_centisecs"   = 1500;
+    };
+
+    services.udev.extraRules = ''
+      ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
+    '';
+
+    environment.systemPackages = with pkgs; [
+      cpupower
+    ];
   };
-
-  services.udev.extraRules = ''
-    ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
-  '';
-
-  environment.systemPackages = with pkgs; [
-    cpupower
-  ];
 }
