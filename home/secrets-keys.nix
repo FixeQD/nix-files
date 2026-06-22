@@ -64,6 +64,18 @@
     fi
   '';
 
+  # ── Yggdrasil ─────────────────────────────────────────────────────────────
+
+  home.file.".config/yggdrasil/yggdrasil.key" = {
+    source = config.sops.secrets.yggdrasil_private_key.path;
+    chmod = "0600";
+  };
+
+  home.file.".config/yggdrasil/multicast_password" = {
+    source = config.sops.secrets.yggdrasil_multicast_password.path;
+    chmod = "0600";
+  };
+
   # ── Git signing ───────────────────────────────────────────────────────────
 
   programs.git.extraConfig = {

@@ -16,6 +16,7 @@
     ../../modules/user.nix
     ../../modules/virt.nix
     ../../modules/bluetooth.nix
+    ../../modules/yggdrasil.nix
   ];
 
   networking.hostName = "HP-ZBook";

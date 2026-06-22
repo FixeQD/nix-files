@@ -4,7 +4,6 @@
     gparted
     ntfs3g
     openrgb
-    tailscale
     wireguard-tools
     spicetify-cli
     fwupd
