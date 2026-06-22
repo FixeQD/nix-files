@@ -17,6 +17,7 @@
     ../../modules/virt.nix
     ../../modules/bluetooth.nix
     ../../modules/yggdrasil.nix
+    ../../modules/persistence.nix
   ];
 
   networking.hostName = "HP-ZBook";
@@ -36,6 +37,7 @@
     virt.enable = true;
     yggdrasil.enable = true;
     zram.enable = true;
+    persistence.enable = true;
   };
 
   home-manager = {

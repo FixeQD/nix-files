@@ -8,6 +8,7 @@
     ./secrets-keys.nix
     ./zed.nix
     ./dotfiles.nix
+    ./persistence.nix
   ];
 
   home = {

@@ -33,9 +33,14 @@
       url = "github:anyrun-launcher/anyrun";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, anyrun, ... }:
+  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, anyrun, impermanence, ... }:
   let
     forSystem = system: nixpkgs.legacyPackages.${system};
 
@@ -48,6 +53,7 @@
           disko.nixosModules.disko
           home-manager.nixosModules.home-manager
           sops-nix.nixosModules.sops
+          impermanence.nixosModules.impermanence
           ./hosts/${hostname}/default.nix
         ] ++ extraModules;
       };

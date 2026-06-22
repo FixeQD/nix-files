@@ -43,12 +43,13 @@ in
             type = "btrfs";
             extraArgs = [ "-L" "Something filesystem" "-f" ];
             subvolumes = {
-              "@"          = { mountpoint = "/";           mountOptions = btrfsOpts; };
-              "@home"      = { mountpoint = "/home";       mountOptions = btrfsOpts; };
-              "@opt"       = { mountpoint = "/opt";        mountOptions = btrfsOpts; };
-              "@var_log"   = { mountpoint = "/var/log";    mountOptions = btrfsOpts; };
-              "@nix"       = { mountpoint = "/nix";        mountOptions = btrfsOpts; };
-              "@snapshots" = { mountpoint = "/.snapshots"; mountOptions = btrfsOpts; };
+              "@"           = { mountpoint = "/";           mountOptions = btrfsOpts; };
+              "@home"       = { mountpoint = "/home";       mountOptions = btrfsOpts; };
+              "@persistent" = { mountpoint = "/persistent"; mountOptions = btrfsOpts; neededForBoot = true; };
+              "@opt"        = { mountpoint = "/opt";        mountOptions = btrfsOpts; };
+              "@var_log"    = { mountpoint = "/var/log";    mountOptions = btrfsOpts; };
+              "@nix"        = { mountpoint = "/nix";        mountOptions = btrfsOpts; };
+              "@snapshots"  = { mountpoint = "/.snapshots"; mountOptions = btrfsOpts; };
             };
           };
         };
