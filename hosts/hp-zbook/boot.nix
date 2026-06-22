@@ -177,6 +177,41 @@ in
       "rtsx_pci_sdmmc"
     ];
     kernelModules = [ "i915" ];
+
+    supportedFilesystems = [ "btrfs" ];
+
+    postDeviceCommands = ''
+      BTRFS_DEV="${config.fileSystems."/".device}"
+      if [ -z "$BTRFS_DEV" ]; then
+        echo "btrfs-rollback: no btrfs device, skipping"
+        return 0
+      fi
+
+      mkdir -p /btrfs_tmp
+      if ! mount -t btrfs "$BTRFS_DEV" /btrfs_tmp; then
+        echo "btrfs-rollback: mount failed, skipping"
+        return 0
+      fi
+
+      if [ -d /btrfs_tmp/@ ]; then
+        if ! [ -d /btrfs_tmp/@_old ]; then
+          echo "btrfs-rollback: creating @_old subvolume"
+          btrfs subvolume create /btrfs_tmp/@_old
+        fi
+        TS=$(date +%Y-%m-%d-%H%M%S)
+        echo "btrfs-rollback: snapshotting old @ to @_old/$TS"
+        btrfs subvolume snapshot /btrfs_tmp/@ "/btrfs_tmp/@_old/$TS"
+        echo "btrfs-rollback: deleting old @"
+        btrfs subvolume delete /btrfs_tmp/@
+      fi
+
+      echo "btrfs-rollback: creating fresh @"
+      btrfs subvolume create /btrfs_tmp/@
+
+      umount /btrfs_tmp
+      rmdir /btrfs_tmp
+      echo "btrfs-rollback: done"
+    '';
   };
 
   boot.kernelModules = [
