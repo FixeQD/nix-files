@@ -1,5 +1,5 @@
 {
-  description = "finix config, currently only for my laptop";
+  description = "finix config";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -37,30 +37,36 @@
 
   outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, anyrun, ... }:
   let
-    system = "x86_64-linux";
-    pkgs   = nixpkgs.legacyPackages.${system};
+    forSystem = system: nixpkgs.legacyPackages.${system};
+
+    mkHost = { hostname, system ? "x86_64-linux", extraModules ? [ ] }:
+      nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit zen-browser anyrun sops-nix; };
+        modules = [
+          finix.nixosModules.default
+          disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          sops-nix.nixosModules.sops
+          ./hosts/${hostname}/default.nix
+        ] ++ extraModules;
+      };
   in
   {
-    nixosConfigurations.hp-zbook = nixpkgs.lib.nixosSystem {
-      inherit system;
-      specialArgs = { inherit zen-browser anyrun sops-nix; };
-      modules = [
-        finix.nixosModules.default
-        disko.nixosModules.disko
-        home-manager.nixosModules.home-manager
-        sops-nix.nixosModules.sops
-        ./hosts/hp-zbook/default.nix
-      ];
+    nixosConfigurations = {
+      hp-zbook = mkHost { hostname = "hp-zbook"; };
     };
 
-    apps.${system}.install = {
+    apps.x86_64-linux.install = let
+      pkgs = forSystem "x86_64-linux";
+    in {
       type = "app";
       program = toString (pkgs.writeShellScript "install-hp-zbook" ''
         set -euo pipefail
         FLAKE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
         echo "==> [1/3] disko: partitioning /dev/nvme0n1"
-        ${disko.packages.${system}.disko}/bin/disko \
+        ${disko.packages.x86_64-linux.disko}/bin/disko \
           --mode destroy-format-mount \
           --flake "$FLAKE_DIR#hp-zbook"
 
