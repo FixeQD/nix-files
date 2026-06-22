@@ -8,5 +8,6 @@
     spicetify-cli
     fwupd
     modprobed-db
+    cpupower-gui
   ];
 }

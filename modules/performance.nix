@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   boot.kernel.sysctl = {
     "vm.swappiness"                  = 180;
@@ -12,4 +12,8 @@
   services.udev.extraRules = ''
     ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
   '';
+
+  environment.systemPackages = with pkgs; [
+    cpupower
+  ];
 }
