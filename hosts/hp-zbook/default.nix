@@ -34,6 +34,7 @@
     performance.enable = true;
     security.enable = true;
     user.enable = true;
+    user.name = "fixeq";
     virt.enable = true;
     yggdrasil.enable = true;
     zram.enable = true;

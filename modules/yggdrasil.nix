@@ -2,7 +2,7 @@
 with lib;
 let
   cfg = config.modules.yggdrasil;
-  homeDir = config.users.users.fixeq.home;
+  homeDir = config.users.users.${config.modules.user.name}.home;
   yggdrasilConfig = builtins.toJSON {
     PrivateKeyPath = "${homeDir}/.config/yggdrasil/yggdrasil.key";
     Peers = [

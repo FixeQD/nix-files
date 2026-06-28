@@ -9,6 +9,7 @@ let cfg = config.modules.audio; in
       description = "PipeWire multimedia daemon";
       runlevels = "2345";
       conditions = [ "service/seatd/ready" ];
+      user = config.modules.user.name;
       command = "${pkgs.pipewire}/bin/pipewire";
       notify = "systemd";
     };
@@ -17,6 +18,7 @@ let cfg = config.modules.audio; in
       description = "WirePlumber session manager";
       runlevels = "2345";
       conditions = [ "service/pipewire/ready" ];
+      user = config.modules.user.name;
       command = "${pkgs.wireplumber}/bin/wireplumber";
       notify = "systemd";
     };
@@ -25,6 +27,7 @@ let cfg = config.modules.audio; in
       description = "PipeWire PulseAudio replacement";
       runlevels = "2345";
       conditions = [ "service/pipewire/ready" ];
+      user = config.modules.user.name;
       command = "${pkgs.pipewire}/bin/pipewire-pulse";
     };
 
