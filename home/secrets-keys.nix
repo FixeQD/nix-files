@@ -57,10 +57,13 @@
     maxCacheTtl = 7200;
   };
 
-  # Import GPG key on activation
+  # Import GPG keys on activation
   home.activation.importGpgKey = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     if [ -r "${config.sops.secrets.auth_key_3.path}" ]; then
       ${pkgs.gnupg}/bin/gpg --import "${config.sops.secrets.auth_key_3.path}" 2>/dev/null || true
+    fi
+    if [ -r "${config.sops.secrets.auth_key_4.path}" ]; then
+      ${pkgs.gnupg}/bin/gpg --import "${config.sops.secrets.auth_key_4.path}" 2>/dev/null || true
     fi
   '';
 
