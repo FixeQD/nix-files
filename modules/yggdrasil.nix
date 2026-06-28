@@ -32,6 +32,15 @@ let
     NodeInfoPrivacy = false;
     NodeInfo = {};
   };
+
+  yggdrasilStart = pkgs.writeShellScript "yggdrasil-start" ''
+    set -euo pipefail
+    umask 0077
+    PW=$(${pkgs.coreutils}/bin/cat "${homeDir}/.config/yggdrasil/multicast_password")
+    ${pkgs.jq}/bin/jq --arg pw "$PW" '.MulticastInterfaces[0].Password = $pw' \
+      /etc/yggdrasil.conf > /run/yggdrasil.conf
+    exec ${pkgs.yggdrasil}/bin/yggdrasil -useconffile /run/yggdrasil.conf
+  '';
 in
 {
   options.modules.yggdrasil.enable = mkEnableOption "Yggdrasil mesh network";
@@ -48,14 +57,7 @@ in
       description = "Yggdrasil Network";
       runlevels = "2345";
       conditions = [ "service/syslogd/ready" ];
-      command = ''
-        set -euo pipefail
-        umask 0077
-        PW=$(${pkgs.coreutils}/bin/cat "${homeDir}/.config/yggdrasil/multicast_password")
-        ${pkgs.jq}/bin/jq --arg pw "$PW" '.MulticastInterfaces[0].Password = $pw' \
-          /etc/yggdrasil.conf > /run/yggdrasil.conf \
-        && exec ${pkgs.yggdrasil}/bin/yggdrasil -useconffile /run/yggdrasil.conf
-      '';
+      command = "${yggdrasilStart}";
     };
   };
 }
