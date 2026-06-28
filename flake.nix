@@ -71,19 +71,33 @@
         set -euo pipefail
         FLAKE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 
-        echo "==> [1/3] disko: partitioning /dev/nvme0n1"
+        echo "==> [1/4] disko: partitioning /dev/nvme0n1"
         ${disko.packages.x86_64-linux.disko}/bin/disko \
           --mode destroy-format-mount \
           --flake "$FLAKE_DIR#hp-zbook"
 
-        echo "==> [2/3] sbctl: creating Secure Boot keys"
+        echo "==> [2/4] sops: installing age key"
+        AGE_KEY_DIR="/mnt/persistent/.config/sops/age"
+        mkdir -p "$AGE_KEY_DIR"
+        if [ -f "$HOME/.config/sops/age/keys.txt" ]; then
+          cp "$HOME/.config/sops/age/keys.txt" "$AGE_KEY_DIR/keys.txt"
+          echo "    copied from $HOME/.config/sops/age/keys.txt"
+        else
+          echo    "    keys.txt not found at default location."
+          printf  "    Paste age private key, then Ctrl+D: "
+          cat > "$AGE_KEY_DIR/keys.txt"
+          echo
+        fi
+        chmod 600 "$AGE_KEY_DIR/keys.txt"
+
+        echo "==> [3/4] sbctl: creating Secure Boot keys"
         ${pkgs.sbctl}/bin/sbctl create-keys \
           --database-path /mnt/etc/secureboot/keys
         ${pkgs.sbctl}/bin/sbctl enroll-keys \
           --database-path /mnt/etc/secureboot/keys \
           --microsoft
 
-        echo "==> [3/3] nixos-install"
+        echo "==> [4/4] nixos-install"
         nixos-install \
           --flake "$FLAKE_DIR#hp-zbook" \
           --no-root-passwd \
