@@ -69,7 +69,7 @@
       type = "app";
       program = toString (pkgs.writeShellScript "install-hp-zbook" ''
         set -euo pipefail
-        FLAKE_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+        FLAKE_DIR="$(pwd)"
 
         echo "==> [1/4] disko: partitioning /dev/nvme0n1"
         ${disko.packages.x86_64-linux.disko}/bin/disko \
