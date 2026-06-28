@@ -48,7 +48,7 @@ in
               "@persistent" = { mountpoint = "/persistent"; mountOptions = btrfsOpts; neededForBoot = true; };
               "@opt"        = { mountpoint = "/opt";        mountOptions = btrfsOpts; };
               "@var_log"    = { mountpoint = "/var/log";    mountOptions = btrfsOpts; };
-              "@nix"        = { mountpoint = "/nix";        mountOptions = btrfsOpts; };
+              "@nix"        = { mountpoint = "/nix";        mountOptions = btrfsOpts; neededForBoot = true; };
               "@snapshots"  = { mountpoint = "/.snapshots"; mountOptions = btrfsOpts; };
             };
           };
