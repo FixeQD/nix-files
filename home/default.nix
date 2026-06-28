@@ -1,4 +1,4 @@
-{ ... }:
+{ username, ... }:
 {
   imports = [
     ./packages.nix
@@ -12,8 +12,8 @@
   ];
 
   home = {
-    username      = "fixeq";
-    homeDirectory = "/home/fixeq";
+    inherit username;
+    homeDirectory = "/home/${username}";
     stateVersion  = "25.11";
   };
 

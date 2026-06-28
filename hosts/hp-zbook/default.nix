@@ -44,11 +44,11 @@
   home-manager = {
     useGlobalPkgs   = true;
     useUserPackages = true;
-    extraSpecialArgs = { inherit zen-browser anyrun; };
+    extraSpecialArgs = { inherit zen-browser anyrun; username = config.modules.user.name; };
     sharedModules = [
       sops-nix.homeManagerModules.sops
     ];
-    users.fixeq = import ../../home/default.nix;
+    users.${config.modules.user.name} = import ../../home/default.nix;
   };
 
   system.stateVersion = "25.11";
