@@ -1,7 +1,7 @@
 { config, ... }:
 
 let
-  trimNewline = str: builtins.replaceStrings [ "\n" ] [ "" ] str;
+  gitSecretsFile = "${config.home.homeDirectory}/.config/git/secrets";
 in
 {
   programs.fish = {
@@ -23,11 +23,21 @@ in
 
   programs.git = {
     enable = true;
-    userName = trimNewline (builtins.readFile config.sops.secrets.git_user_name.path);
-    userEmail = trimNewline (builtins.readFile config.sops.secrets.git_user_email.path);
+    includes = [{ path = gitSecretsFile; }];
     extraConfig = {
       init.defaultBranch = "main";
       pull.rebase        = false;
     };
   };
+
+  home.activation.gitSecrets = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    mkdir -p "$(dirname ${gitSecretsFile})"
+    if [ -r "${config.sops.secrets.git_user_name.path}" ]; then
+      printf '[user]\n\tname = %s\n\temail = %s\n' \
+        "$(cat ${config.sops.secrets.git_user_name.path})" \
+        "$(cat ${config.sops.secrets.git_user_email.path})" \
+        > "${gitSecretsFile}"
+      chmod 600 "${gitSecretsFile}"
+    fi
+  '';
 }
