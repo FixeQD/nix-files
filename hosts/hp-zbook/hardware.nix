@@ -41,7 +41,7 @@ in
           size = "100%";
           content = {
             type = "btrfs";
-            extraArgs = [ "-L" "Something filesystem" "-f" ];
+            extraArgs = [ "-L" "NiggaFS" "-f" ];
             subvolumes = {
               "@"           = { mountpoint = "/";           mountOptions = btrfsOpts; };
               "@home"       = { mountpoint = "/home";       mountOptions = btrfsOpts; };

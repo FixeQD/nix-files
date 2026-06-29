@@ -14,9 +14,11 @@ let cfg = config.modules.performance; in
       "vm.dirty_writeback_centisecs"   = 1500;
     };
 
-    services.udev.extraRules = ''
-      ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
-    '';
+    services.udev.packages = [
+      (pkgs.writeTextDir "etc/udev/rules.d/60-nvme-scheduler.rules" ''
+        ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
+      '')
+    ];
 
     environment.systemPackages = with pkgs; [
       cpupower

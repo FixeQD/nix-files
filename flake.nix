@@ -44,7 +44,10 @@
           disko.nixosModules.disko
           home-manager.nixosModules.home-manager
           sops-nix.nixosModules.sops
+          finix.nixosModules.bluetooth
+          finix.nixosModules.docker
           finix.nixosModules.hyprland
+          finix.nixosModules.nix-daemon
           finix.nixosModules.pipewire
           finix.nixosModules.sudo
           ./hosts/${hostname}/default.nix

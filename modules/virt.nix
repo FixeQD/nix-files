@@ -10,15 +10,6 @@ let cfg = config.modules.virt; in
       prune.enable = false;
     };
 
-    virtualisation.libvirtd = {
-      enable = true;
-      qemu = {
-        package     = pkgs.qemu;
-        ovmf.enable = true;
-        swtpm.enable = true;
-      };
-    };
-
     finit.services.libvirtd = {
       description = "libvirt virtualisation daemon";
       runlevels   = "2345";
