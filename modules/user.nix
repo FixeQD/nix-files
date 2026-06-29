@@ -32,11 +32,7 @@ let cfg = config.modules.user; in
       ];
     };
 
-    security.sudo = {
-      enable             = true;
-      wheelNeedsPassword = true;
-      extraConfig        = "Defaults timestamp_timeout=15";
-    };
+    programs.sudo.enable = true;
 
     services.udev.packages = [ pkgs.android-udev-rules ];
   };

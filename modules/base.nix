@@ -35,7 +35,6 @@ let cfg = config.modules.base; in
       nixd
     ];
 
-    programs.fish.enable = true;
     users.defaultUserShell = pkgs.fish;
 
     services.nix-daemon = {

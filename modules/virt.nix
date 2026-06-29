@@ -26,9 +26,8 @@ let cfg = config.modules.virt; in
       command     = "${pkgs.libvirt}/bin/libvirtd";
     };
 
-    programs.virt-manager.enable = true;
-
     environment.systemPackages = with pkgs; [
+      virt-manager
       qemu
       virt-viewer
       spice-gtk

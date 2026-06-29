@@ -17,8 +17,6 @@ let cfg = config.modules.desktop; in
 
     programs.hyprland = {
       enable         = true;
-      withUWSM       = false;
-      portalPackage  = pkgs.xdg-desktop-portal-hyprland;
     };
 
     environment.sessionVariables = {
@@ -37,7 +35,7 @@ let cfg = config.modules.desktop; in
 
     xdg.portal = {
       enable       = true;
-      extraPortals = [
+      portals = [
         pkgs.xdg-desktop-portal-hyprland
         pkgs.xdg-desktop-portal-gtk
       ];
