@@ -36,6 +36,6 @@ let cfg = config.modules.audio; in
       wireplumber
     ];
 
-    hardware.alsa.enable = true;
+    programs.pipewire.alsa.enable = true;
   };
 }

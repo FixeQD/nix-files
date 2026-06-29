@@ -5,8 +5,7 @@ let cfg = config.modules.base; in
   options.modules.base.enable = mkEnableOption "core packages and Nix settings";
 
   config = mkIf cfg.enable {
-    hardware.enableRedistributableFirmware = true;
-    hardware.cpu.intel.updateMicrocode = true;
+    hardware.firmware = [ pkgs.linux-firmware pkgs.microcode-intel ];
 
     environment.systemPackages = with pkgs; [
       btrfs-progs
@@ -39,17 +38,13 @@ let cfg = config.modules.base; in
     programs.fish.enable = true;
     users.defaultUserShell = pkgs.fish;
 
-    nix = {
+    services.nix-daemon = {
+      enable = true;
       settings = {
-        experimental-features  = [ "nix-command" "flakes" ];
-        auto-optimise-store    = true;
-        warn-dirty             = false;
-        max-jobs               = "auto";
-      };
-      gc = {
-        automatic = true;
-        dates     = "monthly";
-        options   = "--delete-older-than 30d";
+        experimental-features = [ "nix-command" "flakes" ];
+        auto-optimise-store   = true;
+        warn-dirty            = false;
+        max-jobs              = "auto";
       };
     };
   };

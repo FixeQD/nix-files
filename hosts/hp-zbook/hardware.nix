@@ -45,10 +45,9 @@ in
             subvolumes = {
               "@"           = { mountpoint = "/";           mountOptions = btrfsOpts; };
               "@home"       = { mountpoint = "/home";       mountOptions = btrfsOpts; };
-              "@persistent" = { mountpoint = "/persistent"; mountOptions = btrfsOpts; neededForBoot = true; };
               "@opt"        = { mountpoint = "/opt";        mountOptions = btrfsOpts; };
               "@var_log"    = { mountpoint = "/var/log";    mountOptions = btrfsOpts; };
-              "@nix"        = { mountpoint = "/nix";        mountOptions = btrfsOpts; neededForBoot = true; };
+              "@nix"        = { mountpoint = "/nix";        mountOptions = btrfsOpts; };
               "@snapshots"  = { mountpoint = "/.snapshots"; mountOptions = btrfsOpts; };
             };
           };
@@ -57,6 +56,8 @@ in
       };
     };
   };
+
+  fileSystems."/nix".neededForBoot = true;
 
   fileSystems."/tmp" = {
     device = "tmpfs";
@@ -93,6 +94,4 @@ in
       nvidia-vaapi-driver
     ];
   };
-
-  nixpkgs.config.allowUnfree = true;
 }

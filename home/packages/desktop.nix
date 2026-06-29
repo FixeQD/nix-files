@@ -1,7 +1,6 @@
-{ pkgs, zen-browser, anyrun, ... }:
+{ pkgs, zen-browser, ... }:
 {
   home.packages = with pkgs; [
-    anyrun.packages.${pkgs.system}.anyrun
     zen-browser.packages.${pkgs.system}.default
     waybar
     swaynotificationcenter

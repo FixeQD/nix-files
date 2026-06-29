@@ -178,9 +178,9 @@ in
     ];
     kernelModules = [ "i915" ];
 
-    supportedFilesystems = [ "btrfs" ];
+    supportedFilesystems.btrfs.enable = true;
 
-    postDeviceCommands = ''
+    fileSystemImportCommands = ''
       BTRFS_DEV="${config.fileSystems."/".device}"
       if [ -z "$BTRFS_DEV" ]; then
         echo "btrfs-rollback: no btrfs device, skipping"
@@ -222,7 +222,7 @@ in
     "nvidia_drm"
   ];
 
-  boot.extraModprobeConfig = ''
+  environment.etc."modprobe.d/nvidia.conf".text = ''
     options nvidia NVreg_PreserveVideoMemoryAllocations=1
   '';
 

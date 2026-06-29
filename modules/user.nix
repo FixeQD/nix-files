@@ -38,6 +38,6 @@ let cfg = config.modules.user; in
       extraConfig        = "Defaults timestamp_timeout=15";
     };
 
-    programs.adb.enable = true;
+    services.udev.packages = [ pkgs.android-udev-rules ];
   };
 }

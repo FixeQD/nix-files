@@ -5,9 +5,9 @@ let cfg = config.modules.virt; in
   options.modules.virt.enable = mkEnableOption "Docker and libvirt";
 
   config = mkIf cfg.enable {
-    virtualisation.docker = {
+    services.docker = {
       enable = true;
-      autoPrune.enable = false;
+      prune.enable = false;
     };
 
     virtualisation.libvirtd = {
@@ -17,13 +17,6 @@ let cfg = config.modules.virt; in
         ovmf.enable = true;
         swtpm.enable = true;
       };
-    };
-
-    finit.services.docker = {
-      description = "Docker daemon";
-      runlevels   = "2345";
-      conditions  = [ "service/syslogd/ready" ];
-      command     = "${pkgs.docker}/bin/dockerd";
     };
 
     finit.services.libvirtd = {

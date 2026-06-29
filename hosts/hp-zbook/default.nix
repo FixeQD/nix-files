@@ -1,4 +1,4 @@
-{ zen-browser, anyrun, sops-nix, ... }:
+{ config, zen-browser, sops-nix, ... }:
 {
   imports = [
     ./hardware.nix
@@ -17,7 +17,6 @@
     ../../modules/virt.nix
     ../../modules/bluetooth.nix
     ../../modules/yggdrasil.nix
-    ../../modules/persistence.nix
   ];
 
   networking.hostName = "HP-ZBook";
@@ -38,13 +37,12 @@
     virt.enable = true;
     yggdrasil.enable = true;
     zram.enable = true;
-    persistence.enable = true;
   };
 
   home-manager = {
     useGlobalPkgs   = true;
     useUserPackages = true;
-    extraSpecialArgs = { inherit zen-browser anyrun; username = config.modules.user.name; };
+    extraSpecialArgs = { inherit zen-browser; username = config.modules.user.name; };
     sharedModules = [
       sops-nix.homeManagerModules.sops
     ];

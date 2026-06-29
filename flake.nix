@@ -2,12 +2,9 @@
   description = "finix config";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
 
-    finix = {
-      url = "github:finix-community/finix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    finix.url = "github:FixeQD/finix";
 
     disko = {
       url = "github:nix-community/disko";
@@ -28,32 +25,25 @@
       url = "github:youwen5/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    anyrun = {
-      url = "github:anyrun-launcher/anyrun";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    impermanence = {
-      url = "github:nix-community/impermanence";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
-  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, anyrun, impermanence, ... }:
+  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, ... }:
   let
-    forSystem = system: nixpkgs.legacyPackages.${system};
-
     mkHost = { hostname, system ? "x86_64-linux", extraModules ? [ ] }:
-      nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = { inherit zen-browser anyrun sops-nix; };
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+      in
+      finix.lib.finixSystem {
+        inherit (pkgs) lib;
         modules = [
-          finix.nixosModules.default
+          { nixpkgs.pkgs = nixpkgs.lib.mkDefault pkgs; }
+          { _module.args = { inherit zen-browser sops-nix; }; }
           disko.nixosModules.disko
           home-manager.nixosModules.home-manager
           sops-nix.nixosModules.sops
-          impermanence.nixosModules.impermanence
           ./hosts/${hostname}/default.nix
         ] ++ extraModules;
       };
@@ -64,7 +54,7 @@
     };
 
     apps.x86_64-linux.install = let
-      pkgs = forSystem "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
     in {
       type = "app";
       program = toString (pkgs.writeShellScript "install-hp-zbook" ''
@@ -73,11 +63,11 @@
 
         echo "==> [1/4] disko: partitioning /dev/nvme0n1"
         ${disko.packages.x86_64-linux.disko}/bin/disko \
-          --mode destroy-format-mount \
+          --mode destroy,format,mount \
           --flake "$FLAKE_DIR#hp-zbook"
 
         echo "==> [2/4] sops: installing age key"
-        AGE_KEY_DIR="/mnt/persistent/.config/sops/age"
+        AGE_KEY_DIR="/mnt/etc/sops/age"
         mkdir -p "$AGE_KEY_DIR"
         if [ -f "$HOME/.config/sops/age/keys.txt" ]; then
           cp "$HOME/.config/sops/age/keys.txt" "$AGE_KEY_DIR/keys.txt"
