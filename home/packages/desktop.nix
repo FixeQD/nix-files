@@ -1,7 +1,7 @@
 { pkgs, zen-browser, ... }:
 {
   home.packages = with pkgs; [
-    zen-browser.packages.${pkgs.system}.default
+    zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
     waybar
     swaynotificationcenter
     hyprpicker
@@ -18,8 +18,8 @@
     playerctl
     pamixer
     libnotify
-    polkit-kde-agent
-    kdeconnect
+    kdePackages.polkit-kde-agent-1
+    kdePackages.kdeconnect-kde
     eww
   ];
 }

@@ -5,7 +5,9 @@ let cfg = config.modules.base; in
   options.modules.base.enable = mkEnableOption "core packages and Nix settings";
 
   config = mkIf cfg.enable {
-    hardware.firmware = [ pkgs.linux-firmware pkgs.microcode-intel ];
+    # TEMP: pkgs.microcode-intel currently fails to build on this nixpkgs
+    # pin (unpack phase: "find: 'lib/firmware': No such file or directory").
+    hardware.firmware = [ pkgs.linux-firmware ];
 
     environment.systemPackages = with pkgs; [
       btrfs-progs

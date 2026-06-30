@@ -64,43 +64,23 @@
     in {
       type = "app";
       program = toString (pkgs.writeShellScript "install-hp-zbook" ''
-        set -euo pipefail
-        FLAKE_DIR="$(pwd)"
+        export DISKO_BIN="${disko.packages.x86_64-linux.disko}/bin/disko"
+        export SBCTL_BIN="${pkgs.sbctl}/bin/sbctl"
+        export FLAKE_HOST="hp-zbook"
+        source ${./install.sh}
+      '');
+    };
 
-        echo "==> [1/4] disko: partitioning /dev/nvme0n1"
-        ${disko.packages.x86_64-linux.disko}/bin/disko \
-          --mode destroy,format,mount \
-          --flake "$FLAKE_DIR#hp-zbook"
-
-        echo "==> [2/4] sops: installing age key"
-        AGE_KEY_DIR="/mnt/etc/sops/age"
-        mkdir -p "$AGE_KEY_DIR"
-        if [ -f "$HOME/.config/sops/age/keys.txt" ]; then
-          cp "$HOME/.config/sops/age/keys.txt" "$AGE_KEY_DIR/keys.txt"
-          echo "    copied from $HOME/.config/sops/age/keys.txt"
-        else
-          echo    "    keys.txt not found at default location."
-          printf  "    Paste age private key, then Ctrl+D: "
-          cat > "$AGE_KEY_DIR/keys.txt"
-          echo
-        fi
-        chmod 600 "$AGE_KEY_DIR/keys.txt"
-
-        echo "==> [3/4] nixos-install"
-        nixos-install \
-          --flake "$FLAKE_DIR#hp-zbook" \
-          --no-root-passwd \
-          --no-channel-copy
-
-        echo "==> [4/4] sbctl: creating Secure Boot keys"
-        mkdir -p /mnt/etc/secureboot
-        ${pkgs.sbctl}/bin/sbctl create-keys \
-          --database-path /mnt/etc/secureboot/keys
-        ${pkgs.sbctl}/bin/sbctl enroll-keys \
-          --database-path /mnt/etc/secureboot/keys \
-          --microsoft
-
-        echo "==> Ready!"
+    apps.x86_64-linux.resume-install = let
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    in {
+      type = "app";
+      program = toString (pkgs.writeShellScript "resume-install-hp-zbook" ''
+        export DISKO_BIN="${disko.packages.x86_64-linux.disko}/bin/disko"
+        export SBCTL_BIN="${pkgs.sbctl}/bin/sbctl"
+        export FLAKE_HOST="hp-zbook"
+        export DISKO_MODE="mount"
+        source ${./install.sh}
       '');
     };
   };

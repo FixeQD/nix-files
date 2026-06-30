@@ -10,12 +10,12 @@ let
   # Root filesystem type - populated by disko
   rootFsType = config.fileSystems."/".fsType;
 
-  # Root subvolume name - disko automatically appends "subvol=<name>" to mountOptions
-  _rootMountOpts = config.fileSystems."/".mountOptions;
+  # Root subvolume name - disko automatically appends "subvol=<name>" to options
+  _rootMountOpts = config.fileSystems."/".options;
   _rootSubvolOpt = lib.findFirst (lib.hasPrefix "subvol=") null _rootMountOpts;
   rootSubvol      = if _rootSubvolOpt != null
                     then lib.removePrefix "subvol=" _rootSubvolOpt
-                    else throw "boot.nix: subvol= not found in fileSystems.\"/\".mountOptions";
+                    else throw "boot.nix: subvol= not found in fileSystems.\"/\".options";
 
   # ── EFISTUB install hook ───────────────────────────────────────────────────
 
@@ -29,7 +29,14 @@ let
     CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
     CURRENT_INITRD="$BOOT_DIR/initrd-$TIMESTAMP"
 
-    PART=$(${pkgs.util-linux}/bin/lsblk -no PARTNUM "$(${pkgs.coreutils}/bin/df --output=source ${efiMount} | tail -n1)")
+    PART_DEV=$(${pkgs.coreutils}/bin/df --output=source ${efiMount} | tail -n1)
+    PART=$(${pkgs.systemd}/bin/udevadm info --query=property --name="$PART_DEV" \
+      | sed -n 's/^ID_PART_ENTRY_NUMBER=//p')
+    if [ -z "$PART" ]; then
+      PART=$(${pkgs.coreutils}/bin/cat \
+        "/sys/class/block/$(${pkgs.coreutils}/bin/basename "$PART_DEV")/partition" \
+        2>/dev/null || true)
+    fi
 
     # ─────────────────────────────────────────────────────────────────────────
     # Pre-flight validation

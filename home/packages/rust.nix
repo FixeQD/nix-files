@@ -2,7 +2,6 @@
 {
   home.packages = with pkgs; [
     rustup
-    rust-analyzer
     clang
     lldb
     mold

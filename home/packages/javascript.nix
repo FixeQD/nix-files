@@ -2,7 +2,7 @@
 {
   home.packages = with pkgs; [
     bun
-    nodePackages.typescript-language-server
-    nodePackages.eslint
+    typescript-language-server
+    eslint
   ];
 }
