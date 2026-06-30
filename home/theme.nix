@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
   # ── GTK ───────────────────────────────────────────────────────────────────
   gtk = {
@@ -8,6 +8,8 @@
       name    = "Breeze";
       package = pkgs.kdePackages.breeze-gtk;
     };
+
+    gtk4.theme = config.gtk.theme;
 
     iconTheme = {
       name    = "breeze";

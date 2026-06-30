@@ -22,7 +22,7 @@ let cfg = config.modules.locale; in
       };
     };
 
-    console = {
+    hardware.console = {
       keyMap = "pl";
       font = "Lat2-Terminus16";
     };

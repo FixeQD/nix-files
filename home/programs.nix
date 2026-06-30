@@ -24,7 +24,7 @@ in
   programs.git = {
     enable = true;
     includes = [{ path = gitSecretsFile; }];
-    extraConfig = {
+    settings = {
       init.defaultBranch = "main";
       pull.rebase        = false;
     };

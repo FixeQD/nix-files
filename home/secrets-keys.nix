@@ -4,9 +4,11 @@
   sops.secrets = {
     auth_key_1 = {
       sopsFile = ./secrets.yaml;
+      mode = "0600";
     };
     auth_key_2 = {
       sopsFile = ./secrets.yaml;
+      mode = "0644";
     };
     auth_key_3 = {
       sopsFile = ./secrets.yaml;
@@ -20,20 +22,21 @@
 
   programs.ssh = {
     enable = true;
-    addKeysToAgent = "yes";
-    identityFile = "~/.ssh/id_ed25519_gh";
-    serverAliveInterval = 60;
-    serverAliveCountMax = 3;
+    enableDefaultConfig = false;
+    settings."*" = {
+      AddKeysToAgent = "yes";
+      ServerAliveInterval = 60;
+      ServerAliveCountMax = 3;
+      IdentityFile = "~/.ssh/id_ed25519_gh";
+    };
   };
 
   home.file.".ssh/id_ed25519_gh" = {
     source = config.sops.secrets.auth_key_1.path;
-    chmod = "0600";
   };
 
   home.file.".ssh/id_ed25519_gh.pub" = {
     source = config.sops.secrets.auth_key_2.path;
-    chmod = "0644";
   };
 
   # ── GPG ───────────────────────────────────────────────────────────────────
@@ -52,7 +55,7 @@
   services.gpg-agent = {
     enable = true;
     enableSshSupport = true;
-    pinentryPackage = pkgs.pinentry-qt;
+    pinentry.package = pkgs.pinentry-qt;
     defaultCacheTtl = 3600;
     maxCacheTtl = 7200;
   };
@@ -71,17 +74,15 @@
 
   home.file.".config/yggdrasil/yggdrasil.key" = {
     source = config.sops.secrets.yggdrasil_private_key.path;
-    chmod = "0600";
   };
 
   home.file.".config/yggdrasil/multicast_password" = {
     source = config.sops.secrets.yggdrasil_multicast_password.path;
-    chmod = "0600";
   };
 
   # ── Git signing ───────────────────────────────────────────────────────────
 
-  programs.git.extraConfig = {
+  programs.git.settings = {
     user.signingKey = "F869D8453D757219";
     commit.gpgsign = true;
     tag.gpgsign = true;

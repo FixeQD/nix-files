@@ -13,7 +13,7 @@
       "git-firefly"
     ];
 
-    settings = {
+    userSettings = {
       cli_default_open_behavior = "existing_window";
 
       project_panel.dock      = "left";

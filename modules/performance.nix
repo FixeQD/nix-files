@@ -20,8 +20,8 @@ let cfg = config.modules.performance; in
       '')
     ];
 
-    environment.systemPackages = with pkgs; [
-      cpupower
+    environment.systemPackages = [
+      config.boot.kernelPackages.cpupower
     ];
   };
 }

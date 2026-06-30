@@ -12,7 +12,6 @@ let cfg = config.modules.bluetooth; in
 
     environment.systemPackages = with pkgs; [
       bluez
-      bluez-utils
       blueman
     ];
   };

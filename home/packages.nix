@@ -11,7 +11,6 @@
     ./packages/java.nix
     ./packages/dev-tools.nix
     ./packages/system.nix
-    ./packages/network.nix
     ./packages/archives.nix
   ];
 }

@@ -86,18 +86,19 @@
         fi
         chmod 600 "$AGE_KEY_DIR/keys.txt"
 
-        echo "==> [3/4] sbctl: creating Secure Boot keys"
+        echo "==> [3/4] nixos-install"
+        nixos-install \
+          --flake "$FLAKE_DIR#hp-zbook" \
+          --no-root-passwd \
+          --no-channel-copy
+
+        echo "==> [4/4] sbctl: creating Secure Boot keys"
+        mkdir -p /mnt/etc/secureboot
         ${pkgs.sbctl}/bin/sbctl create-keys \
           --database-path /mnt/etc/secureboot/keys
         ${pkgs.sbctl}/bin/sbctl enroll-keys \
           --database-path /mnt/etc/secureboot/keys \
           --microsoft
-
-        echo "==> [4/4] nixos-install"
-        nixos-install \
-          --flake "$FLAKE_DIR#hp-zbook" \
-          --no-root-passwd \
-          --no-channel-copy
 
         echo "==> Ready!"
       '');

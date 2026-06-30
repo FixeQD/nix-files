@@ -12,8 +12,8 @@
       gmail_client_secret = {};
       hf_token            = {};
       nvidia_nim_api_key  = {};
-      yggdrasil_private_key         = {};
-      yggdrasil_multicast_password  = {};
+      yggdrasil_private_key         = { mode = "0600"; };
+      yggdrasil_multicast_password  = { mode = "0600"; };
       git_user_name       = {};
       git_user_email      = {};
     };
