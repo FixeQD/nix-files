@@ -186,7 +186,7 @@ in
     kernelModules = [ "i915" ];
 
     supportedFilesystems.btrfs.enable = true;
-
+/*
     fileSystemImportCommands = ''
       BTRFS_DEV="${config.fileSystems."/".device}"
       if [ -z "$BTRFS_DEV" ]; then
@@ -219,6 +219,7 @@ in
       rmdir /btrfs_tmp
       echo "btrfs-rollback: done"
     '';
+*/
   };
 
   boot.kernelModules = [
