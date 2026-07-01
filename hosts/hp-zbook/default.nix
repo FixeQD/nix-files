@@ -17,6 +17,7 @@
     ../../modules/virt.nix
     ../../modules/bluetooth.nix
     ../../modules/yggdrasil.nix
+    ../../modules/mdevd.nix
   ];
 
   networking.hostName = "HP-ZBook";
@@ -28,6 +29,7 @@
     cron.enable = true;
     desktop.enable = true;
     locale.enable = true;
+    mdevd.enable = true;
     network.enable = true;
     pam.enable = true;
     performance.enable = true;
