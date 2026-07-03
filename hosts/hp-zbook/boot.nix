@@ -60,10 +60,12 @@ let
 
     KERNEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernel' "$BOOTSPEC")
     INITRD=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".initrd' "$BOOTSPEC")
+    INIT=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".init' "$BOOTSPEC")
     PARAMS=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernelParams | join(" ")' "$BOOTSPEC")
 
     [ -n "$KERNEL" ] || { echo "ERROR: kernel not found in boot.json"; exit 1; }
     [ -n "$INITRD" ] || { echo "ERROR: initrd not found in boot.json"; exit 1; }
+    [ -n "$INIT" ]   || { echo "ERROR: init not found in boot.json"; exit 1; }
     [ -f "$KERNEL" ] || { echo "ERROR: kernel file not found: $KERNEL"; exit 1; }
     [ -f "$INITRD" ] || { echo "ERROR: initrd file not found: $INITRD"; exit 1; }
 
@@ -151,7 +153,7 @@ let
       --part "$PART" \
       --label "Finix" \
       --loader '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
-      --unicode "initrd=\EFI\nixos\initrd-$TIMESTAMP $PARAMS"; then
+      --unicode "initrd=\EFI\nixos\initrd-$TIMESTAMP init=$INIT $PARAMS"; then
       echo "ERROR: Failed to create boot entry!"
       exit 1
     fi
@@ -186,40 +188,6 @@ in
     kernelModules = [ "i915" ];
 
     supportedFilesystems.btrfs.enable = true;
-/*
-    fileSystemImportCommands = ''
-      BTRFS_DEV="${config.fileSystems."/".device}"
-      if [ -z "$BTRFS_DEV" ]; then
-        echo "btrfs-rollback: no btrfs device, skipping"
-        return 0
-      fi
-
-      mkdir -p /btrfs_tmp
-      if ! mount -t btrfs "$BTRFS_DEV" /btrfs_tmp; then
-        echo "btrfs-rollback: mount failed, skipping"
-        return 0
-      fi
-
-      if [ -d /btrfs_tmp/@ ]; then
-        if ! [ -d /btrfs_tmp/@_old ]; then
-          echo "btrfs-rollback: creating @_old subvolume"
-          btrfs subvolume create /btrfs_tmp/@_old
-        fi
-        TS=$(date +%Y-%m-%d-%H%M%S)
-        echo "btrfs-rollback: snapshotting old @ to @_old/$TS"
-        btrfs subvolume snapshot /btrfs_tmp/@ "/btrfs_tmp/@_old/$TS"
-        echo "btrfs-rollback: deleting old @"
-        btrfs subvolume delete /btrfs_tmp/@
-      fi
-
-      echo "btrfs-rollback: creating fresh @"
-      btrfs subvolume create /btrfs_tmp/@
-
-      umount /btrfs_tmp
-      rmdir /btrfs_tmp
-      echo "btrfs-rollback: done"
-    '';
-*/
   };
 
   boot.kernelModules = [
