@@ -50,6 +50,7 @@
           finix.nixosModules.nix-daemon
           finix.nixosModules.pipewire
           finix.nixosModules.sudo
+          finix.nixosModules.sysklogd
           ./hosts/${hostname}/default.nix
         ] ++ extraModules;
       };
