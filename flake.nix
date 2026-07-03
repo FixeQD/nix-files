@@ -46,6 +46,7 @@
           sops-nix.nixosModules.sops
           finix.nixosModules.bluetooth
           finix.nixosModules.docker
+          finix.nixosModules.getty
           finix.nixosModules.hyprland
           finix.nixosModules.nix-daemon
           finix.nixosModules.pipewire
@@ -67,7 +68,9 @@
       program = toString (pkgs.writeShellScript "install-hp-zbook" ''
         export DISKO_BIN="${disko.packages.x86_64-linux.disko}/bin/disko"
         export SBCTL_BIN="${pkgs.sbctl}/bin/sbctl"
+        export MKPASSWD_BIN="${pkgs.mkpasswd}/bin/mkpasswd"
         export FLAKE_HOST="hp-zbook"
+        export PRIMARY_USER="fixeq"
         source ${./install.sh}
       '');
     };
@@ -79,7 +82,9 @@
       program = toString (pkgs.writeShellScript "resume-install-hp-zbook" ''
         export DISKO_BIN="${disko.packages.x86_64-linux.disko}/bin/disko"
         export SBCTL_BIN="${pkgs.sbctl}/bin/sbctl"
+        export MKPASSWD_BIN="${pkgs.mkpasswd}/bin/mkpasswd"
         export FLAKE_HOST="hp-zbook"
+        export PRIMARY_USER="fixeq"
         export DISKO_MODE="mount"
         source ${./install.sh}
       '');

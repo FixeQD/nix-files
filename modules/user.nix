@@ -15,6 +15,7 @@ let cfg = config.modules.user; in
       isNormalUser = true;
       description  = cfg.name;
       shell        = pkgs.fish;
+      passwordFile = "/etc/nixos-passwords/${cfg.name}";
       extraGroups  = [
         "wheel"
         "seat"
@@ -31,6 +32,8 @@ let cfg = config.modules.user; in
         "adbusers"
       ];
     };
+
+    users.users.root.passwordFile = "/etc/nixos-passwords/root";
 
     programs.sudo.enable = true;
 

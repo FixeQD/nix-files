@@ -6,17 +6,50 @@ set -euo pipefail
 
 : "${DISKO_BIN:?DISKO_BIN must be set}"
 : "${SBCTL_BIN:?SBCTL_BIN must be set}"
+: "${MKPASSWD_BIN:?MKPASSWD_BIN must be set}"
+: "${PRIMARY_USER:?PRIMARY_USER must be set}"
 : "${FLAKE_HOST:=hp-zbook}"
 : "${DISKO_MODE:=destroy,format,mount}"
 
 FLAKE_DIR="$(pwd)"
 
-echo "==> [1/4] disko (mode: $DISKO_MODE): /dev/nvme0n1"
+echo "==> [1/5] disko (mode: $DISKO_MODE): /dev/nvme0n1"
 "$DISKO_BIN" \
   --mode "$DISKO_MODE" \
   --flake "$FLAKE_DIR#$FLAKE_HOST"
 
-echo "==> [2/4] sops: installing age key"
+echo "==> [2/5] passwords: setting passwords for $PRIMARY_USER and root"
+PASSWD_DIR="/mnt/etc/nixos-passwords"
+mkdir -p "$PASSWD_DIR"
+chmod 700 "$PASSWD_DIR"
+
+ask_password() {
+  local label="$1" pass pass2
+  while true; do
+    printf '    password for %s: ' "$label" >&2
+    stty -echo; read -r pass; stty echo; echo >&2
+    printf '    confirm password for %s: ' "$label" >&2
+    stty -echo; read -r pass2; stty echo; echo >&2
+    if [ -z "$pass" ]; then
+      echo "    empty password, try again" >&2
+      continue
+    fi
+    if [ "$pass" = "$pass2" ]; then
+      printf '%s' "$pass"
+      return
+    fi
+    echo "    passwords don't match, try again" >&2
+  done
+}
+
+for label_user in "$PRIMARY_USER" "root"; do
+  password="$(ask_password "$label_user")"
+  "$MKPASSWD_BIN" -m sha-512 -s <<< "$password" > "$PASSWD_DIR/$label_user"
+  chmod 600 "$PASSWD_DIR/$label_user"
+  unset password
+done
+
+echo "==> [3/5] sops: installing age key"
 AGE_KEY_DIR="/mnt/etc/sops/age"
 mkdir -p "$AGE_KEY_DIR"
 if [ -f "$HOME/.config/sops/age/keys.txt" ]; then
@@ -39,13 +72,13 @@ else
 fi
 chmod 600 "$AGE_KEY_DIR/keys.txt"
 
-echo "==> [3/4] nixos-install"
+echo "==> [4/5] nixos-install"
 nixos-install \
   --flake "$FLAKE_DIR#$FLAKE_HOST" \
   --no-root-passwd \
   --no-channel-copy
 
-echo "==> [4/4] sbctl: creating Secure Boot keys"
+echo "==> [5/5] sbctl: creating Secure Boot keys"
 # sbctl sandboxes itself with Landlock and only allows access to the canonical /etc/secureboot path
 mkdir -p /mnt/etc/secureboot
 nixos-enter --root /mnt -c "'$SBCTL_BIN' create-keys --database-path /etc/secureboot/keys"
