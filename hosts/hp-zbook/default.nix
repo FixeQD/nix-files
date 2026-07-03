@@ -22,6 +22,9 @@
 
   networking.hostName = "HP-ZBook";
 
+  # Shit...
+  services.sysklogd.enable = true;
+
   modules = {
     audio.enable = true;
     base.enable = true;
