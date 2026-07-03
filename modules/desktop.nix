@@ -10,7 +10,7 @@ let cfg = config.modules.desktop; in
       runlevels   = "2345";
       conditions  = [ "service/syslogd/ready" ];
       command     = "${pkgs.seatd}/bin/seatd -g seat";
-      notify      = "systemd";
+      notify      = "s6";
     };
 
     users.groups.seat = {};

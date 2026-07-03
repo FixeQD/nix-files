@@ -11,7 +11,7 @@ let cfg = config.modules.audio; in
       conditions = [ "service/seatd/ready" ];
       user = config.modules.user.name;
       command = "${pkgs.pipewire}/bin/pipewire";
-      notify = "systemd";
+      notify = "s6";
     };
 
     finit.services.wireplumber = {
@@ -20,7 +20,7 @@ let cfg = config.modules.audio; in
       conditions = [ "service/pipewire/ready" ];
       user = config.modules.user.name;
       command = "${pkgs.wireplumber}/bin/wireplumber";
-      notify = "systemd";
+      notify = "s6";
     };
 
     finit.services.pipewire-pulse = {

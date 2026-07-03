@@ -10,7 +10,7 @@ let cfg = config.modules.network; in
       runlevels = "2345";
       conditions = [ "service/syslogd/ready" ];
       command = "${pkgs.networkmanager}/bin/NetworkManager -n";
-      notify = "systemd";
+      notify = "s6";
     };
 
     finit.services.iwd = {
