@@ -7,8 +7,6 @@ let cfg = config.modules.desktop; in
   config = mkIf cfg.enable {
     services.seatd.enable = true;
 
-    users.groups.seat = {};
-
     programs.hyprland = {
       enable         = true;
     };

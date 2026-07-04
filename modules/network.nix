@@ -8,7 +8,7 @@ let cfg = config.modules.network; in
     finit.services.network-manager = {
       description = "NetworkManager";
       runlevels = "2345";
-      conditions = [ "service/syslogd/ready" ];
+      conditions = [ "service/dbus/ready" ];
       command = "${pkgs.networkmanager}/bin/NetworkManager -n";
       notify = "s6";
     };
@@ -19,6 +19,12 @@ let cfg = config.modules.network; in
       conditions = [ "service/syslogd/ready" ];
       command = "${pkgs.iwd}/bin/iwd";
     };
+
+    finit.tmpfiles.rules = [
+      "d /var/lib/iwd 0700"
+    ];
+
+    services.dbus.packages = [ pkgs.networkmanager pkgs.wpa_supplicant pkgs.iwd ];
 
     environment.etc."NetworkManager/conf.d/wifi-backend.conf".text = ''
       [device]
