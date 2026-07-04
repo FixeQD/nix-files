@@ -5,6 +5,8 @@ let cfg = config.modules.network; in
   options.modules.network.enable = mkEnableOption "NetworkManager and iwd";
 
   config = mkIf cfg.enable {
+    services.iwd.enable = true;
+
     finit.services.network-manager = {
       description = "NetworkManager";
       runlevels = "2345";
@@ -13,22 +15,19 @@ let cfg = config.modules.network; in
       notify = "s6";
     };
 
-    finit.services.iwd = {
-      description = "iNet Wireless Daemon";
-      runlevels = "2345";
-      conditions = [ "service/syslogd/ready" ];
-      command = "${pkgs.iwd}/bin/iwd";
-    };
-
-    finit.tmpfiles.rules = [
-      "d /var/lib/iwd 0700"
-    ];
-
-    services.dbus.packages = [ pkgs.networkmanager pkgs.wpa_supplicant pkgs.iwd ];
+    services.dbus.packages = [ pkgs.networkmanager pkgs.wpa_supplicant ];
 
     environment.etc."NetworkManager/conf.d/wifi-backend.conf".text = ''
       [device]
       wifi.backend=iwd
+    '';
+
+    environment.etc."NetworkManager/NetworkManager.conf".text = ''
+      [main]
+      plugins=keyfile
+
+      [keyfile]
+      unmanaged-devices=none
     '';
 
     environment.systemPackages = with pkgs; [
