@@ -53,6 +53,7 @@
           finix.nixosModules.sudo
           finix.nixosModules.sysklogd
           finix.nixosModules.iwd
+          finix.nixosModules.sddm
           ./hosts/${hostname}/default.nix
         ] ++ extraModules;
       };

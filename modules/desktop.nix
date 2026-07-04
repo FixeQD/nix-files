@@ -32,5 +32,15 @@ let cfg = config.modules.desktop; in
         pkgs.xdg-desktop-portal-gtk
       ];
     };
+
+    services.sddm.enable = true;
+    services.sddm.settings = {
+      DisplayServer = 'wayland';
+      Wayland.SessionDir = "/run/current-system/sw/share/wayland-sessions";
+    };
+
+    environment.pathsToLink = [
+      "/share/wayland-sessions"
+    ];
   };
 }
