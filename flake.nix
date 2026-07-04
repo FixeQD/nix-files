@@ -52,6 +52,7 @@
           finix.nixosModules.pipewire
           finix.nixosModules.sudo
           finix.nixosModules.sysklogd
+          finix.nixosModules.seatd
           ./hosts/${hostname}/default.nix
         ] ++ extraModules;
       };

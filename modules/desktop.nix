@@ -5,13 +5,7 @@ let cfg = config.modules.desktop; in
   options.modules.desktop.enable = mkEnableOption "Hyprland desktop and seatd";
 
   config = mkIf cfg.enable {
-    finit.services.seatd = {
-      description = "seatd seat management daemon";
-      runlevels   = "2345";
-      conditions  = [ "service/syslogd/ready" ];
-      command     = "${pkgs.seatd}/bin/seatd -g seat";
-      notify      = "s6";
-    };
+    services.seatd.enable = true;
 
     users.groups.seat = {};
 
