@@ -12,7 +12,6 @@
     ../../modules/audio.nix
     ../../modules/desktop.nix
     ../../modules/security.nix
-    ../../modules/pam.nix
     ../../modules/user.nix
     ../../modules/virt.nix
     ../../modules/bluetooth.nix
@@ -34,7 +33,6 @@
     locale.enable = true;
     mdevd.enable = true;
     network.enable = true;
-    pam.enable = true;
     performance.enable = true;
     security.enable = true;
     user.enable = true;
