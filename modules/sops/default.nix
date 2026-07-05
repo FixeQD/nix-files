@@ -444,7 +444,6 @@ in
             (
               [
                 "users"
-                "groups"
               ]
               ++ lib.optional cfg.age.generateKey "generate-age-key"
             )
