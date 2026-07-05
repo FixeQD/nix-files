@@ -53,5 +53,4 @@
   };
 
   finit.runlevel = 3;
-  system.stateVersion = "25.11";
 }
