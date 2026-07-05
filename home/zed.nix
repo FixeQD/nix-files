@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, osConfig, ... }:
 {
   programs.zed-editor = {
     enable = true;
@@ -100,7 +100,7 @@
 
         "Nvidia NIM" = {
           api_url = "https://integrate.api.nvidia.com/v1";
-          api_key_path = "${config.sops.secrets.nvidia_nim_api_key.path}";
+          api_key_path = "${osConfig.sops.secrets.nvidia_nim_api_key.path}";
           available_models = [
             {
               name = "qwen/qwen3-coder-480b-a35b-instruct";

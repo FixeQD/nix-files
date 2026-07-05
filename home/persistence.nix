@@ -17,7 +17,6 @@ in
       ".gnupg"
       ".local/share/keyrings"
       ".local/share/direnv"
-      ".config/sops"
     ];
   };
 }

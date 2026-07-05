@@ -1,4 +1,4 @@
-{ config, zen-browser, sops-nix, ... }:
+{ config, zen-browser, ... }:
 {
   imports = [
     ./hardware.nix
@@ -12,6 +12,7 @@
     ../../modules/audio.nix
     ../../modules/desktop.nix
     ../../modules/security.nix
+    ../../modules/secrets.nix
     ../../modules/user.nix
     ../../modules/virt.nix
     ../../modules/bluetooth.nix
@@ -42,14 +43,13 @@
     zram.enable = true;
   };
 
-  home-manager = {
-    useGlobalPkgs   = true;
-    useUserPackages = true;
-    extraSpecialArgs = { inherit zen-browser; username = config.modules.user.name; };
-    sharedModules = [
-      sops-nix.homeManagerModules.sops
-    ];
-    users.${config.modules.user.name} = import ../../home/default.nix;
+  home-manager.users.${config.modules.user.name} = {
+    _module.args = {
+      inherit zen-browser;
+      username = config.modules.user.name;
+    };
+
+    imports = [ ../../home/default.nix ];
   };
 
   finit.runlevel = 3;

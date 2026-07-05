@@ -5,6 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
 
     finix.url = "github:FixeQD/finix";
+    community-modules.url = "github:finix-community/community-modules";
 
     disko = {
       url = "github:nix-community/disko";
@@ -27,29 +28,30 @@
     };
   };
 
-  outputs = { nixpkgs, finix, disko, home-manager, sops-nix, zen-browser, ... }:
+  outputs = { nixpkgs, finix, community-modules, disko, home-manager, sops-nix, zen-browser, ... }:
   let
     mkHost = { hostname, system ? "x86_64-linux", extraModules ? [ ] }:
       let
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
+          overlays = [ home-manager.overlays.default sops-nix.overlays.default ];
         };
       in
       finix.lib.finixSystem {
         inherit (pkgs) lib;
         modules = [
           { nixpkgs.pkgs = nixpkgs.lib.mkDefault pkgs; }
-          { _module.args = { inherit zen-browser sops-nix; }; }
+          { _module.args = { inherit zen-browser; }; }
           disko.nixosModules.disko
-          home-manager.nixosModules.home-manager
-          sops-nix.nixosModules.sops
+          community-modules.nixosModules.home-manager
+          community-modules.nixosModules.pipewire
+          ./modules/sops
           finix.nixosModules.bluetooth
           finix.nixosModules.docker
           finix.nixosModules.getty
           finix.nixosModules.hyprland
           finix.nixosModules.nix-daemon
-          finix.nixosModules.pipewire
           finix.nixosModules.sudo
           finix.nixosModules.sysklogd
           finix.nixosModules.iwd
