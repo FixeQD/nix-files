@@ -12,11 +12,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -28,14 +23,14 @@
     };
   };
 
-  outputs = { nixpkgs, finix, community-modules, disko, home-manager, sops-nix, zen-browser, ... }:
+  outputs = { nixpkgs, finix, community-modules, disko, sops-nix, zen-browser, ... }:
   let
     mkHost = { hostname, system ? "x86_64-linux", extraModules ? [ ] }:
       let
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
-          overlays = [ home-manager.overlays.default sops-nix.overlays.default ];
+          overlays = [ sops-nix.overlays.default ];
         };
       in
       finix.lib.finixSystem {
