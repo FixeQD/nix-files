@@ -6,11 +6,11 @@
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    settings."*" = {
-      AddKeysToAgent = "yes";
-      ServerAliveInterval = 60;
-      ServerAliveCountMax = 3;
-      IdentityFile = "~/.ssh/id_ed25519_gh";
+    matchBlocks."*" = {
+      addKeysToAgent = "yes";
+      serverAliveInterval = 60;
+      serverAliveCountMax = 3;
+      identityFile = "~/.ssh/id_ed25519_gh";
     };
   };
 
