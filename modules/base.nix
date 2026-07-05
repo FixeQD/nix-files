@@ -35,6 +35,7 @@ let cfg = config.modules.base; in
       starship
       ghostty
       nixd
+      nixos-rebuild-ng
     ];
 
     users.defaultUserShell = pkgs.fish;

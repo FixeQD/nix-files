@@ -6,14 +6,11 @@ let cfg = config.modules.network; in
 
   config = mkIf cfg.enable {
     services.iwd.enable = true;
-    services.iwd.settings = {
-      General.EnableNetworkConfiguration = false;
-    };
 
     services.dhcpcd.enable = true;
-    services.dhcpcd.extraConfig = ''
-      static domain_name_servers=1.1.1.2 1.0.0.2
-    '';
+    services.dhcpcd.settings = {
+      static = "domain_name_servers=1.1.1.2 1.0.0.2";
+    };
 
     environment.systemPackages = with pkgs; [
       iwd

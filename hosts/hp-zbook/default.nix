@@ -52,5 +52,6 @@
     users.${config.modules.user.name} = import ../../home/default.nix;
   };
 
+  finit.runlevel = 3;
   system.stateVersion = "25.11";
 }
