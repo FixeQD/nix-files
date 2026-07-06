@@ -17,42 +17,27 @@ let
                     then lib.removePrefix "subvol=" _rootSubvolOpt
                     else throw "boot.nix: subvol= not found in fileSystems.\"/\".options";
 
+  # Keep this many Finix generations in NVRAM
+  keepGenerations = 3;
+
   # ── EFISTUB install hook ───────────────────────────────────────────────────
 
   efistubHook = pkgs.writeShellScript "efistub-install" ''
     set -euo pipefail
 
     BOOTSPEC="$1/boot.json"
-    DISK="${bootDisk}"
     BOOT_DIR="${efiMount}/EFI/nixos"
     TIMESTAMP=$(${pkgs.coreutils}/bin/date +%s)
     CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
     CURRENT_INITRD="$BOOT_DIR/initrd-$TIMESTAMP"
-
-    PART_DEV=$(${pkgs.coreutils}/bin/df --output=source ${efiMount} | tail -n1)
-    PART=$(${pkgs.systemd}/bin/udevadm info --query=property --name="$PART_DEV" \
-      | sed -n 's/^ID_PART_ENTRY_NUMBER=//p')
-    if [ -z "$PART" ]; then
-      PART=$(${pkgs.coreutils}/bin/cat \
-        "/sys/class/block/$(${pkgs.coreutils}/bin/basename "$PART_DEV")/partition" \
-        2>/dev/null || true)
-    fi
+    FINIX="${pkgs.finix-bootctl}/bin/finix-bootctl"
 
     # ─────────────────────────────────────────────────────────────────────────
     # Pre-flight validation
     # ─────────────────────────────────────────────────────────────────────────
 
-    for tool in date basename; do
-      if ! command -v "$tool" &>/dev/null; then
-        echo "ERROR: required tool not found: $tool"
-        exit 1
-      fi
-    done
-
     [ -r "$BOOTSPEC" ] || { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
-    [ -n "$DISK" ]     || { echo "ERROR: boot device is empty"; exit 1; }
-    [ -n "$PART" ]     || { echo "ERROR: partition number is empty"; exit 1; }
-    [ -b "$DISK" ]     || { echo "ERROR: boot device not found: $DISK"; exit 1; }
+    [ -b "${bootDisk}" ] || { echo "ERROR: boot device not found: ${bootDisk}"; exit 1; }
 
     # ─────────────────────────────────────────────────────────────────────────
     # Extract boot parameters
@@ -76,14 +61,8 @@ let
     mkdir -p "$BOOT_DIR"
 
     echo "==> Installing kernel and initrd (timestamp: $TIMESTAMP)"
-    if ! install -m 0644 "$KERNEL" "$CURRENT_KERNEL"; then
-      echo "ERROR: Failed to install kernel"
-      exit 1
-    fi
-    if ! install -m 0644 "$INITRD" "$CURRENT_INITRD"; then
-      echo "ERROR: Failed to install initrd"
-      exit 1
-    fi
+    install -m 0644 "$KERNEL" "$CURRENT_KERNEL"
+    install -m 0644 "$INITRD" "$CURRENT_INITRD"
 
     # ─────────────────────────────────────────────────────────────────────────
     # Sign kernel if Secure Boot is enabled
@@ -91,76 +70,39 @@ let
 
     if [ -d /etc/secureboot/keys ]; then
       echo "==> sbctl: signing kernel"
-      if ! ${pkgs.sbctl}/bin/sbctl sign "$CURRENT_KERNEL"; then
+      ${pkgs.sbctl}/bin/sbctl sign "$CURRENT_KERNEL" || \
         echo "WARNING: sbctl signing failed, but continuing (Secure Boot may not work)"
-      fi
     fi
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Manage boot entry generations
+    # Create new primary boot entry (finix-bootctl puts it first in BootOrder)
     # ─────────────────────────────────────────────────────────────────────────
 
-    echo "==> Managing boot entry generations"
-
-    ACTIVE_KERNEL_TS=$(${pkgs.efibootmgr}/bin/efibootmgr -v \
-      | grep "Finix" \
-      | grep -oP "kernel-[0-9]+" \
-      | sed 's/kernel-//' \
-      | sort -n \
-      | tail -n1 || true)
-
-    PREV=$(${pkgs.efibootmgr}/bin/efibootmgr \
-      | grep -oP "(?<=Boot)[0-9A-F]+(?=[\* ]+Finix \(previous\))" || true)
-
-    if [ -n "$PREV" ]; then
-      echo "==> Removing old previous entry ($PREV)"
-      if ! ${pkgs.efibootmgr}/bin/efibootmgr -q -b "$PREV" -B; then
-        echo "WARNING: Failed to remove old boot entry, but continuing"
-      fi
-    fi
-
-    for kernel_file in "$BOOT_DIR"/kernel-*.efi; do
-      if [ -f "$kernel_file" ] && [ "$kernel_file" != "$CURRENT_KERNEL" ]; then
-        TS=$(basename "$kernel_file" .efi | sed 's/kernel-//')
-        if [ "$TS" != "$ACTIVE_KERNEL_TS" ]; then
-          echo "==> Cleaning up orphaned file: $kernel_file"
-          rm -f "$kernel_file"
-          rm -f "$BOOT_DIR/initrd-$TS"
-        fi
-      fi
-    done
-
-    # Rename current "Finix" to "Finix (previous)"
-    CURRENT=$(${pkgs.efibootmgr}/bin/efibootmgr \
-      | grep -oP "(?<=Boot)[0-9A-F]+(?=[\* ]+Finix\b)(?!.*\(previous\))" || true)
-
-    if [ -n "$CURRENT" ]; then
-      echo "==> Promoting current entry to previous: $CURRENT"
-      if ! ${pkgs.efibootmgr}/bin/efibootmgr -b "$CURRENT" -L "Finix (previous)"; then
-        echo "WARNING: Failed to rename boot entry, but continuing"
-      fi
-    fi
+    echo "==> Creating new primary entry (timestamp $TIMESTAMP)"
+    NEW_ID=$("$FINIX" create "${efiMount}" \
+      '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
+      "initrd=\EFI\nixos\initrd-$TIMESTAMP init=$INIT $PARAMS" \
+      "$TIMESTAMP")
+    echo "==> Created Boot$NEW_ID"
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Create new primary boot entry
+    # Prune old generations
     # ─────────────────────────────────────────────────────────────────────────
 
-    echo "==> Creating new primary entry ($DISK, partition $PART)"
-    if ! ${pkgs.efibootmgr}/bin/efibootmgr \
-      --quiet \
-      --create \
-      --disk "$DISK" \
-      --part "$PART" \
-      --label "Finix" \
-      --loader '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
-      --unicode "initrd=\EFI\nixos\initrd-$TIMESTAMP init=$INIT $PARAMS"; then
-      echo "ERROR: Failed to create boot entry!"
-      exit 1
+    mapfile -t GENERATIONS < <("$FINIX" list)   # lines: "<id-hex> <timestamp>", newest first
+    echo "==> ''${#GENERATIONS[@]} Finix generation(s) in NVRAM"
+
+    if [ "''${#GENERATIONS[@]}" -gt "${toString keepGenerations}" ]; then
+      for line in "''${GENERATIONS[@]:${toString keepGenerations}}"; do
+        id=$(${pkgs.gawk}/bin/awk '{print $1}' <<<"$line")
+        ts=$(${pkgs.gawk}/bin/awk '{print $2}' <<<"$line")
+        echo "==> Pruning old generation Boot$id (ts $ts)"
+        "$FINIX" delete "$id"
+        rm -f "$BOOT_DIR/kernel-$ts.efi" "$BOOT_DIR/initrd-$ts"
+      done
     fi
 
-    echo "==> Boot entries:"
-    ${pkgs.efibootmgr}/bin/efibootmgr | grep -E "Finix|^BootOrder"
-    echo "==> EFISTUB setup complete (rollback available via \"Finix (previous)\")"
+    echo "==> EFISTUB setup complete"
   '';
 in
 {

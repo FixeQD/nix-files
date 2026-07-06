@@ -30,7 +30,7 @@
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
-          overlays = [ sops-nix.overlays.default ];
+          overlays = [ sops-nix.overlays.default (import ./pkgs) ];
         };
       in
       finix.lib.finixSystem {
