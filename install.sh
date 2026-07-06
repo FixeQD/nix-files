@@ -151,9 +151,6 @@ nixos-install \
   --no-channel-copy
 
 echo "==> [5/5] sbctl: creating Secure Boot keys"
-# sbctl sandboxes itself with Landlock and only allows access to the canonical /etc/secureboot path
-mkdir -p /mnt/etc/secureboot
-nixos-enter --root /mnt -c "'$SBCTL_BIN' create-keys --database-path /etc/secureboot/keys"
-nixos-enter --root /mnt -c "'$SBCTL_BIN' enroll-keys --database-path /etc/secureboot/keys --microsoft"
+nixos-enter --root /mnt -c "'$SBCTL_BIN' create-keys"
 
 echo "==> Ready!"
