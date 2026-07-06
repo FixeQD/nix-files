@@ -52,6 +52,7 @@
           finix.nixosModules.iwd
           finix.nixosModules.dhcpcd
           finix.nixosModules.sddm
+          finix.nixosModules.zzz
           ./hosts/${hostname}/default.nix
         ] ++ extraModules;
       };
