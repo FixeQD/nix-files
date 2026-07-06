@@ -145,7 +145,7 @@ fn list_generations(mgr: &dyn VarManager) -> Vec<Generation> {
         })
         .collect();
 
-    gens.sort_by(|a, b| b.ts.cmp(&a.ts));
+    gens.sort_by_key(|b| std::cmp::Reverse(b.ts));
     gens
 }
 
