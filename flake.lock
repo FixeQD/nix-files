@@ -1,20 +1,5 @@
 {
   "nodes": {
-    "community-modules": {
-      "locked": {
-        "lastModified": 1782949255,
-        "narHash": "sha256-D9bKvcQYoIfc6CX/0lMSA+eXKRceSaMPl2MAFsQrhH0=",
-        "owner": "finix-community",
-        "repo": "community-modules",
-        "rev": "ec1481258f01a02ff895a8ef333f5ba627fde003",
-        "type": "github"
-      },
-      "original": {
-        "owner": "finix-community",
-        "repo": "community-modules",
-        "type": "github"
-      }
-    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -37,11 +22,11 @@
     },
     "finix": {
       "locked": {
-        "lastModified": 1783262884,
-        "narHash": "sha256-Gl+8GoXXhcbtInRCi/TE+cy6uLfBO2RcFOSaqkSULhE=",
+        "lastModified": 1783157470,
+        "narHash": "sha256-p2jgg1H+0S1hDP2aSmg/s05v/Asxo3utI0QW4DcXZ/Q=",
         "owner": "FixeQD",
         "repo": "finix",
-        "rev": "d65e551ee6b58e193f00288bf66bceb8f331205e",
+        "rev": "7371ff70356cb3e9a86570d147ba34c15fd6a6cf",
         "type": "github"
       },
       "original": {
@@ -50,13 +35,33 @@
         "type": "github"
       }
     },
+    "home-manager": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783222121,
+        "narHash": "sha256-E/ElL373TO8lQ2aMvYyzN+k4xkVaUGoRqoa8AtM71tI=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "a1645f40777620c4bd2b6d854b290c2fc354a266",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1783224372,
-        "narHash": "sha256-8i/87eeoqiGE4yOTjwSA3Eh/ziJRQEmd/unYU+K27sk=",
+        "lastModified": 1782959384,
+        "narHash": "sha256-xnJJk+ct+D2+wdRxj1wk36w5zV9RVESwRqcklPdt3fM=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "d407951447dcd00442e97087bf374aad70c04cea",
+        "rev": "65179426c83bb3f6bc14898b42ea1c6f01d374b0",
         "type": "github"
       },
       "original": {
@@ -68,9 +73,9 @@
     },
     "root": {
       "inputs": {
-        "community-modules": "community-modules",
         "disko": "disko",
         "finix": "finix",
+        "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix",
         "zen-browser": "zen-browser"

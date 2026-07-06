@@ -1,6 +1,9 @@
 { pkgs, lib, config, ... }:
 with lib;
-let cfg = config.modules.user; in
+let
+  cfg = config.modules.user;
+  runtimeDir = "/run/user/${toString config.users.users.${cfg.name}.uid}";
+in
 {
   options.modules.user = {
     enable = mkEnableOption "primary user and sudo";
@@ -38,11 +41,17 @@ let cfg = config.modules.user; in
     programs.sudo.enable = true;
 
     services.udev.packages = [ pkgs.android-udev-rules ];
+
+    finit.tmpfiles.rules = [
+      "d ${runtimeDir} 0700 ${cfg.name} ${config.users.users.${cfg.name}.group} -"
+    ];
+
     finit.services.pipewire = mkIf config.programs.pipewire.enable {
       description = "PipeWire multimedia daemon (user session)";
       runlevels   = "2345";
-      conditions  = [ "service/seatd/ready" ];
+      conditions  = [ "service/seatd/ready" "task/tmpfiles-setup/success" ];
       user        = cfg.name;
+      environment = { XDG_RUNTIME_DIR = runtimeDir; };
       command     = "${pkgs.pipewire}/bin/pipewire";
       notify      = "s6";
     };
@@ -52,6 +61,7 @@ let cfg = config.modules.user; in
       runlevels   = "2345";
       conditions  = [ "service/pipewire/ready" ];
       user        = cfg.name;
+      environment = { XDG_RUNTIME_DIR = runtimeDir; };
       command     = "${pkgs.wireplumber}/bin/wireplumber";
       notify      = "s6";
     };
@@ -61,6 +71,7 @@ let cfg = config.modules.user; in
       runlevels   = "2345";
       conditions  = [ "service/pipewire/ready" ];
       user        = cfg.name;
+      environment = { XDG_RUNTIME_DIR = runtimeDir; };
       command     = "${pkgs.pipewire}/bin/pipewire-pulse";
     };
   };

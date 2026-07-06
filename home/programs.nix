@@ -6,6 +6,7 @@ in
 {
   programs.fish = {
     enable    = true;
+    generateCompletions = false;
     functions.fish_greeting = "fastfetch";
     shellInit = ''
       set -gx GPG_TTY (tty)

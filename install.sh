@@ -42,35 +42,65 @@ ask_password() {
   done
 }
 
-for label_user in "$PRIMARY_USER" "root"; do
-  password="$(ask_password "$label_user")"
-  "$MKPASSWD_BIN" -m sha-512 -s <<< "$password" > "$PASSWD_DIR/$label_user"
-  chmod 600 "$PASSWD_DIR/$label_user"
-  unset password
-done
+(
+  umask 077
+  for label_user in "$PRIMARY_USER" "root"; do
+    password="$(ask_password "$label_user")"
+    "$MKPASSWD_BIN" -m sha-512 -s <<< "$password" > "$PASSWD_DIR/$label_user"
+    chmod 600 "$PASSWD_DIR/$label_user"
+    unset password
+  done
+)
 
 echo "==> [3/5] sops: installing age key"
 AGE_KEY_DIR="/mnt/etc/sops/age"
 mkdir -p "$AGE_KEY_DIR"
-if [ -f "$HOME/.config/sops/age/keys.txt" ]; then
-  cp "$HOME/.config/sops/age/keys.txt" "$AGE_KEY_DIR/keys.txt"
-  echo "    copied from $HOME/.config/sops/age/keys.txt"
+chmod 700 "$AGE_KEY_DIR"
+
+run_sops() {
+  if command -v sops >/dev/null 2>&1; then
+    sops "$@"
+  else
+    nix --extra-experimental-features 'nix-command flakes' run nixpkgs#sops -- "$@"
+  fi
+}
+
+DEFAULT_KEY_PATH="$HOME/.config/sops/age/keys.txt"
+printf '    path to age key file [%s]: ' "$DEFAULT_KEY_PATH" >&2
+read -r KEY_PATH
+KEY_PATH="${KEY_PATH:-$DEFAULT_KEY_PATH}"
+
+(
+  umask 077
+  if [ -f "$KEY_PATH" ]; then
+    cp "$KEY_PATH" "$AGE_KEY_DIR/keys.txt"
+    echo "    copied from $KEY_PATH"
+  else
+    echo "    '$KEY_PATH' not found - falling back to manual paste"
+    printf  "    Paste age private key, then Ctrl+D: "
+    stty -echo
+    trap 'stty echo' EXIT
+    : > "$AGE_KEY_DIR/keys.txt"
+    while IFS= read -r line; do
+      printf '*'
+      printf '%s\n' "$line" >> "$AGE_KEY_DIR/keys.txt"
+    done
+    stty echo
+    trap - EXIT
+    echo
+    echo "    ($(wc -l < "$AGE_KEY_DIR/keys.txt") lines written)"
+  fi
+  chmod 600 "$AGE_KEY_DIR/keys.txt"
+)
+
+echo "    verifying key by decrypting home/secrets.yaml..."
+if SOPS_AGE_KEY_FILE="$AGE_KEY_DIR/keys.txt" run_sops -d "$FLAKE_DIR/home/secrets.yaml" >/dev/null; then
+  echo "    OK - key decrypts secrets.yaml successfully."
 else
-  echo    "    keys.txt not found at default location."
-  printf  "    Paste age private key, then Ctrl+D: "
-  stty -echo
-  trap 'stty echo' EXIT
-  : > "$AGE_KEY_DIR/keys.txt"
-  while IFS= read -r line; do
-    printf '*'
-    printf '%s\n' "$line" >> "$AGE_KEY_DIR/keys.txt"
-  done
-  stty echo
-  trap - EXIT
-  echo
-  echo "    ($(wc -l < "$AGE_KEY_DIR/keys.txt") lines written)"
+  echo "    FAILED - this key cannot decrypt $FLAKE_DIR/home/secrets.yaml" >&2
+  rm -f "$AGE_KEY_DIR/keys.txt"
+  exit 1
 fi
-chmod 600 "$AGE_KEY_DIR/keys.txt"
 
 echo "==> [4/5] nixos-install"
 nixos-install \

@@ -56,7 +56,7 @@ in
     finit.services.yggdrasil = {
       description = "Yggdrasil Network";
       runlevels = "2345";
-      conditions = [ "service/syslogd/ready" ];
+      conditions = [ "service/syslogd/ready" "task/hm-activate-${config.modules.user.name}/success" ];
       command = "${yggdrasilStart}";
     };
   };

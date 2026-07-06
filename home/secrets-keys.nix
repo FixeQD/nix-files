@@ -14,11 +14,13 @@
     };
   };
 
-  home.activation.linkSshKeys = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p "$HOME/.ssh"
-    ln -sf "${osConfig.sops.secrets.auth_key_1.path}" "$HOME/.ssh/id_ed25519_gh"
-    ln -sf "${osConfig.sops.secrets.auth_key_2.path}" "$HOME/.ssh/id_ed25519_gh.pub"
-  '';
+  home.file.".ssh/id_ed25519_gh" = {
+    source = config.lib.file.mkOutOfStoreSymlink osConfig.sops.secrets.auth_key_1.path;
+  };
+
+  home.file.".ssh/id_ed25519_gh.pub" = {
+    source = config.lib.file.mkOutOfStoreSymlink osConfig.sops.secrets.auth_key_2.path;
+  };
 
   # ── GPG ───────────────────────────────────────────────────────────────────
 
@@ -53,11 +55,13 @@
 
   # ── Yggdrasil ─────────────────────────────────────────────────────────────
 
-  home.activation.linkYggdrasilSecrets = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    mkdir -p "$HOME/.config/yggdrasil"
-    ln -sf "${osConfig.sops.secrets.yggdrasil_private_key.path}" "$HOME/.config/yggdrasil/yggdrasil.key"
-    ln -sf "${osConfig.sops.secrets.yggdrasil_multicast_password.path}" "$HOME/.config/yggdrasil/multicast_password"
-  '';
+  home.file.".config/yggdrasil/yggdrasil.key" = {
+    source = config.lib.file.mkOutOfStoreSymlink osConfig.sops.secrets.yggdrasil_private_key.path;
+  };
+
+  home.file.".config/yggdrasil/multicast_password" = {
+    source = config.lib.file.mkOutOfStoreSymlink osConfig.sops.secrets.yggdrasil_multicast_password.path;
+  };
 
   # ── Git signing ───────────────────────────────────────────────────────────
 

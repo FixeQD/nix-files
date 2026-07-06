@@ -1,10 +1,12 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   user = config.modules.user.name;
 in
 {
   sops.age.keyFile = "/etc/sops/age/keys.txt";
   sops.defaultSopsFile = ../home/secrets.yaml;
+
+  environment.systemPackages = [ pkgs.sops ];
 
   sops.secrets = {
     gmail_client_id     = { owner = user; };
