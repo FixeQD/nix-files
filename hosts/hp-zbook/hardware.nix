@@ -68,7 +68,7 @@ in
   # ── GPU: NVIDIA Quadro T2000 + Intel UHD 630 (Optimus) ─────────────────────
 
   programs.zzz.enable = true;
-  
+
   hardware.nvidia = {
     enable = true;
     modesetting.enable = true;
@@ -86,6 +86,10 @@ in
       nvidiaBusId = "PCI:1:0:0";
     };
   };
+
+  # TEMP: pkgs.microcode-intel currently fails to build on this nixpkgs
+  # pin (unpack phase: "find: 'lib/firmware': No such file or directory").
+  hardware.firmware = [ pkgs.sof-firmware pkgs.alsa-firmware ];
 
   hardware.graphics = {
     enable = true;

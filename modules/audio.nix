@@ -7,5 +7,9 @@ let cfg = config.modules.audio; in
   config = mkIf cfg.enable {
     programs.pipewire.enable = true;
     programs.pipewire.alsa.enable = true;
+
+    environment.systemPackages = [
+      pkgs.pavucontrol
+    ];
   };
 }
