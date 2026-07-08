@@ -53,7 +53,6 @@ in
       user        = cfg.name;
       environment = { XDG_RUNTIME_DIR = runtimeDir; };
       command     = "${pkgs.pipewire}/bin/pipewire";
-      notify      = "s6";
     };
 
     finit.services.wireplumber = mkIf (config.programs.pipewire.enable && config.programs.pipewire.wireplumber.enable) {
@@ -63,7 +62,6 @@ in
       user        = cfg.name;
       environment = { XDG_RUNTIME_DIR = runtimeDir; };
       command     = "${pkgs.wireplumber}/bin/wireplumber";
-      notify      = "s6";
     };
 
     finit.services.pipewire-pulse = mkIf config.programs.pipewire.enable {
