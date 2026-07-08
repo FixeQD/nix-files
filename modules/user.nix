@@ -2,7 +2,10 @@
 with lib;
 let
   cfg = config.modules.user;
-  runtimeDir = "/run/user/${toString config.users.users.${cfg.name}.uid}";
+  runtimeDirCmd = "/run/user/$(${pkgs.coreutils}/bin/id -u ${cfg.name})";
+  wrapWithRuntimeDir = cmd: ''
+    ${pkgs.bash}/bin/bash -c 'export XDG_RUNTIME_DIR=${runtimeDirCmd}; exec ${cmd}'
+  '';
 in
 {
   options.modules.user = {
@@ -42,17 +45,24 @@ in
 
     services.udev.packages = [ pkgs.android-udev-rules ];
 
-    finit.tmpfiles.rules = [
-      "d ${runtimeDir} 0700 ${cfg.name} ${config.users.users.${cfg.name}.group} -"
-    ];
+    finit.tasks.user-runtime-dir = {
+      description = "Create ${cfg.name}'s XDG_RUNTIME_DIR";
+      runlevels   = "2345";
+      conditions  = [ "service/seatd/ready" ];
+      command     = pkgs.writeShellScript "user-runtime-dir" ''
+        dir="${runtimeDirCmd}"
+        mkdir -p "$dir"
+        chown ${cfg.name}:${config.users.users.${cfg.name}.group} "$dir"
+        chmod 0700 "$dir"
+      '';
+    };
 
     finit.services.pipewire = mkIf config.programs.pipewire.enable {
       description = "PipeWire multimedia daemon (user session)";
       runlevels   = "2345";
-      conditions  = [ "service/seatd/ready" "task/tmpfiles-setup/success" ];
+      conditions  = [ "service/seatd/ready" "task/user-runtime-dir/success" ];
       user        = cfg.name;
-      environment = { XDG_RUNTIME_DIR = runtimeDir; };
-      command     = "${pkgs.pipewire}/bin/pipewire";
+      command     = wrapWithRuntimeDir "${pkgs.pipewire}/bin/pipewire";
     };
 
     finit.services.wireplumber = mkIf (config.programs.pipewire.enable && config.programs.pipewire.wireplumber.enable) {
@@ -60,8 +70,7 @@ in
       runlevels   = "2345";
       conditions  = [ "service/pipewire/ready" ];
       user        = cfg.name;
-      environment = { XDG_RUNTIME_DIR = runtimeDir; };
-      command     = "${pkgs.wireplumber}/bin/wireplumber";
+      command     = wrapWithRuntimeDir "${pkgs.wireplumber}/bin/wireplumber";
     };
 
     finit.services.pipewire-pulse = mkIf config.programs.pipewire.enable {
@@ -69,8 +78,7 @@ in
       runlevels   = "2345";
       conditions  = [ "service/pipewire/ready" ];
       user        = cfg.name;
-      environment = { XDG_RUNTIME_DIR = runtimeDir; };
-      command     = "${pkgs.pipewire}/bin/pipewire-pulse";
+      command     = wrapWithRuntimeDir "${pkgs.pipewire}/bin/pipewire-pulse";
     };
   };
 }
