@@ -67,7 +67,10 @@ in
 
   # ── GPU: NVIDIA Quadro T2000 + Intel UHD 630 (Optimus) ─────────────────────
 
+  programs.zzz.enable = true;
+  
   hardware.nvidia = {
+    enable = true;
     modesetting.enable = true;
     powerManagement.enable = true;
     powerManagement.finegrained = false;

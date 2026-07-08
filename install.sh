@@ -23,13 +23,55 @@ PASSWD_DIR="/mnt/etc/nixos-passwords"
 mkdir -p "$PASSWD_DIR"
 chmod 700 "$PASSWD_DIR"
 
+read_password_masked() {
+  local prompt="$1" password="" char=""
+
+  redraw_masked_prompt() {
+    local stars=""
+    if [ "${#password}" -gt 0 ]; then
+      stars="$(printf '%*s' "${#password}" '' | tr ' ' '*')"
+    fi
+    printf '\r\033[K%s%s' "$prompt" "$stars" >&2
+  }
+
+  redraw_masked_prompt
+  stty -echo
+  trap 'stty echo' RETURN
+
+  while IFS= read -r -s -n1 char; do
+    if [ -z "$char" ]; then
+      break
+    fi
+
+    case "$char" in
+      $'\177'|$'\b')
+        if [ -n "$password" ]; then
+          password="${password%?}"
+          redraw_masked_prompt
+        fi
+        ;;
+      $'\e')
+        # Discard the rest of escape sequences
+        IFS= read -r -s -n2 -t 0.01 _ || true
+        ;;
+      *)
+        password+="$char"
+        redraw_masked_prompt
+        ;;
+    esac
+  done
+
+  stty echo
+  trap - RETURN
+  echo >&2
+  printf '%s' "$password"
+}
+
 ask_password() {
   local label="$1" pass pass2
   while true; do
-    printf '    password for %s: ' "$label" >&2
-    stty -echo; read -r pass; stty echo; echo >&2
-    printf '    confirm password for %s: ' "$label" >&2
-    stty -echo; read -r pass2; stty echo; echo >&2
+    pass="$(read_password_masked "    password for $label: ")"
+    pass2="$(read_password_masked "    confirm password for $label: ")"
     if [ -z "$pass" ]; then
       echo "    empty password, try again" >&2
       continue
@@ -109,9 +151,6 @@ nixos-install \
   --no-channel-copy
 
 echo "==> [5/5] sbctl: creating Secure Boot keys"
-# sbctl sandboxes itself with Landlock and only allows access to the canonical /etc/secureboot path
-mkdir -p /mnt/etc/secureboot
-nixos-enter --root /mnt -c "'$SBCTL_BIN' create-keys --database-path /etc/secureboot/keys"
-nixos-enter --root /mnt -c "'$SBCTL_BIN' enroll-keys --database-path /etc/secureboot/keys --microsoft"
+nixos-enter --root /mnt -c "'$SBCTL_BIN' create-keys"
 
 echo "==> Ready!"

@@ -38,6 +38,8 @@ let cfg = config.modules.desktop; in
       Wayland.SessionDir = "/run/current-system/sw/share/wayland-sessions";
     };
 
+    services.dbus.packages = [ pkgs.dconf ];
+
     environment.pathsToLink = [
       "/share/wayland-sessions"
     ];

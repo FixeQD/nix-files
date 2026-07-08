@@ -13,7 +13,7 @@
     inherit username;
     homeDirectory = "/home/${username}";
     stateVersion  = "26.05";
-    backupFileExtension = "backup";
+    enableNixpkgsReleaseCheck = false;
   };
 
   xdg.enable          = true;
