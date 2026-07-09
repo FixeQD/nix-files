@@ -5,60 +5,81 @@
     enable = true;
 
     theme = {
-      name    = "Breeze";
+      name = "Breeze";
       package = pkgs.kdePackages.breeze-gtk;
     };
 
     gtk4.theme = config.gtk.theme;
 
     iconTheme = {
-      name    = "breeze";
+      name = "breeze";
       package = pkgs.kdePackages.breeze-icons;
     };
 
     cursorTheme = {
-      name    = "Bibata-Modern-Ice";
+      name = "Bibata-Modern-Ice";
       package = pkgs.bibata-cursors;
-      size    = 24;
+      size = 24;
     };
 
     font = {
-      name    = "Noto Sans";
-      size    = 10;
+      name = "Noto Sans";
+      size = 10;
       package = pkgs.noto-fonts;
     };
 
     gtk3.extraConfig = {
       gtk-application-prefer-dark-theme = true;
-      gtk-decoration-layout             = "icon:minimize,maximize,close";
-      gtk-enable-animations             = true;
-      gtk-enable-input-method-menu      = true;
-      gtk-enable-mnemonics              = true;
+      gtk-decoration-layout = "icon:minimize,maximize,close";
+      gtk-enable-animations = true;
+      gtk-enable-input-method-menu = true;
+      gtk-enable-mnemonics = true;
     };
 
     gtk4.extraConfig = {
       gtk-application-prefer-dark-theme = true;
-      gtk-decoration-layout             = "icon:minimize,maximize,close";
-      gtk-enable-input-method-menu      = true;
-      gtk-enable-mnemonics              = true;
+      gtk-decoration-layout = "icon:minimize,maximize,close";
+      gtk-enable-input-method-menu = true;
+      gtk-enable-mnemonics = true;
     };
   };
 
   # ── Qt ────────────────────────────────────────────────────────────────────
   qt = {
-    enable         = true;
+    enable = true;
     platformTheme.name = "kde";
     style = {
-      name    = "Breeze";
+      name = "Breeze";
       package = pkgs.kdePackages.breeze;
+    };
+  };
+
+  # ── dconf ──────────────────────────────────────────────────────────────────
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      color-scheme = "prefer-dark";
+      gtk-theme = "Breeze";
+      icon-theme = "breeze";
+      cursor-theme = "Bibata-Modern-Ice";
+      cursor-size = 24;
+      font-name = "Noto Sans 10";
+      document-font-name = "Noto Sans 10";
+      monospace-font-name = "JetBrainsMono Nerd Font 10";
+      font-antialiasing = "rgba";
+      font-hinting = "slight";
+      clock-format = "24h";
+      enable-animations = true;
+      enable-hot-corners = false;
+      text-scaling-factor = 1.0;
+      show-battery-percentage = true;
     };
   };
 
   # ── Cursor (system-wide przez X resources) ────────────────────────────────
   home.pointerCursor = {
-    name    = "Bibata-Modern-Ice";
+    name = "Bibata-Modern-Ice";
     package = pkgs.bibata-cursors;
-    size    = 24;
+    size = 24;
     gtk.enable = true;
     x11.enable = true;
   };

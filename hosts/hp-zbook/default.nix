@@ -4,6 +4,7 @@
     ./hardware.nix
     ./boot.nix
     ../../modules/base.nix
+    ../../modules/fonts.nix
     ../../modules/locale.nix
     ../../modules/network.nix
     ../../modules/cron.nix

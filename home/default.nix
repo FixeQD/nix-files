@@ -4,6 +4,7 @@
     ./packages.nix
     ./programs.nix
     ./theme.nix
+    ./dconf-extra.nix
     ./secrets-keys.nix
     ./zed.nix
     ./dotfiles.nix
