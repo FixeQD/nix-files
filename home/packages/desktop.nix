@@ -21,5 +21,6 @@
     kdePackages.polkit-kde-agent-1
     kdePackages.kdeconnect-kde
     eww
+    quickshell
   ];
 }

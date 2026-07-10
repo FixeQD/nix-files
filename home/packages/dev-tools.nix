@@ -6,5 +6,6 @@
     mitmproxy
     android-tools
     opencode
+    lmstudio
   ];
 }
