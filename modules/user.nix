@@ -1,17 +1,19 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 with lib;
 let
   cfg = config.modules.user;
   runtimeDirCmd = "/run/user/$(${pkgs.coreutils}/bin/id -u ${cfg.name})";
-  wrapWithRuntimeDir = cmd: ''
-    ${pkgs.bash}/bin/bash -c 'export XDG_RUNTIME_DIR=${runtimeDirCmd}; exec ${cmd}'
-  '';
 in
 {
   options.modules.user = {
     enable = mkEnableOption "primary user and sudo";
-    name   = mkOption {
-      type        = types.str;
+    name = mkOption {
+      type = types.str;
       description = "Primary user login name";
     };
   };
@@ -19,10 +21,10 @@ in
   config = mkIf cfg.enable {
     users.users.${cfg.name} = {
       isNormalUser = true;
-      description  = cfg.name;
-      shell        = pkgs.fish;
+      description = cfg.name;
+      shell = pkgs.fish;
       passwordFile = "/etc/nixos-passwords/${cfg.name}";
-      extraGroups  = [
+      extraGroups = [
         "wheel"
         "seat"
         "storage"
@@ -47,9 +49,9 @@ in
 
     finit.tasks.user-runtime-dir = {
       description = "Create ${cfg.name}'s XDG_RUNTIME_DIR";
-      runlevels   = "2345";
-      conditions  = [ "service/seatd/ready" ];
-      command     = pkgs.writeShellScript "user-runtime-dir" ''
+      runlevels = "2345";
+      conditions = [ "service/seatd/ready" ];
+      command = pkgs.writeShellScript "user-runtime-dir" ''
         dir="${runtimeDirCmd}"
         mkdir -p "$dir"
         chown ${cfg.name}:${config.users.users.${cfg.name}.group} "$dir"
@@ -57,28 +59,16 @@ in
       '';
     };
 
-    finit.services.pipewire = mkIf config.programs.pipewire.enable {
-      description = "PipeWire multimedia daemon (user session)";
-      runlevels   = "2345";
-      conditions  = [ "service/seatd/ready" "task/user-runtime-dir/success" ];
-      user        = cfg.name;
-      command     = wrapWithRuntimeDir "${pkgs.pipewire}/bin/pipewire";
-    };
-
-    finit.services.wireplumber = mkIf (config.programs.pipewire.enable && config.programs.pipewire.wireplumber.enable) {
-      description = "WirePlumber session manager (user session)";
-      runlevels   = "2345";
-      conditions  = [ "service/pipewire/ready" ];
-      user        = cfg.name;
-      command     = wrapWithRuntimeDir "${pkgs.wireplumber}/bin/wireplumber";
-    };
-
-    finit.services.pipewire-pulse = mkIf config.programs.pipewire.enable {
-      description = "PipeWire PulseAudio replacement (user session)";
-      runlevels   = "2345";
-      conditions  = [ "service/pipewire/ready" ];
-      user        = cfg.name;
-      command     = wrapWithRuntimeDir "${pkgs.pipewire}/bin/pipewire-pulse";
+    environment.etc."profile.d/pipewire-session.sh" = mkIf config.programs.pipewire.enable {
+      text = ''
+        if [ -n "$XDG_RUNTIME_DIR" ] && [ ! -e "$XDG_RUNTIME_DIR/pipewire-session.lock" ]; then
+          if ( set -o noclobber; : > "$XDG_RUNTIME_DIR/pipewire-session.lock" ) 2>/dev/null; then
+            ${config.programs.pipewire.package}/bin/pipewire >/dev/null 2>&1 &
+            ${config.programs.pipewire.package}/bin/pipewire-pulse >/dev/null 2>&1 &
+            ${lib.optionalString config.programs.pipewire.wireplumber.enable "${config.programs.pipewire.wireplumber.package}/bin/wireplumber >/dev/null 2>&1 &"}
+          fi
+        fi
+      '';
     };
   };
 }
