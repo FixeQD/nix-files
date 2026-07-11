@@ -4,7 +4,6 @@
     mpv
     yt-dlp
     qview
-    spotify
     discord
   ];
 }

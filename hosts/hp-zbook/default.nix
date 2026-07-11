@@ -1,4 +1,4 @@
-{ config, zen-browser, ... }:
+{ config, zen-browser, spicetify-nix, ... }:
 {
   imports = [
     ./hardware.nix
@@ -46,11 +46,14 @@
 
   home-manager.users.${config.modules.user.name} = {
     _module.args = {
-      inherit zen-browser;
+      inherit zen-browser spicetify-nix;
       username = config.modules.user.name;
     };
 
-    imports = [ ../../home/default.nix ];
+    imports = [
+      ../../home/default.nix
+      spicetify-nix.homeManagerModules.default
+    ];
   };
 
   finit.runlevel = 3;

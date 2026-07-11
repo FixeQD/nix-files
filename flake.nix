@@ -21,9 +21,14 @@
       url = "github:youwen5/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { nixpkgs, finix, community-modules, disko, sops-nix, zen-browser, ... }:
+  outputs = { nixpkgs, finix, community-modules, disko, sops-nix, zen-browser, spicetify-nix, ... }:
   let
     mkHost = { hostname, system ? "x86_64-linux", extraModules ? [ ] }:
       let
@@ -37,7 +42,7 @@
         inherit (pkgs) lib;
         modules = [
           { nixpkgs.pkgs = nixpkgs.lib.mkDefault pkgs; }
-          { _module.args = { inherit zen-browser; }; }
+          { _module.args = { inherit zen-browser spicetify-nix; }; }
           disko.nixosModules.disko
           community-modules.nixosModules.home-manager
           community-modules.nixosModules.pipewire

@@ -8,6 +8,7 @@
     ./secrets-keys.nix
     ./zed.nix
     ./dotfiles.nix
+    ./spicetify.nix
   ];
 
   home = {
