@@ -138,10 +138,15 @@ fn list_generations(mgr: &dyn VarManager) -> Vec<Generation> {
     let mut gens: Vec<Generation> = mgr
         .get_boot_entries()
         .unwrap_or_else(|e| die(format!("reading boot entries: {e}")))
-        .filter_map(|(res, _var)| {
-            let bv = res.ok()?;
-            let ts = finix_timestamp(&bv.entry.description)?;
-            Some(Generation { id: bv.id, ts })
+        .filter_map(|(res, var)| match res {
+            Ok(bv) => {
+                let ts = finix_timestamp(&bv.entry.description)?;
+                Some(Generation { id: bv.id, ts })
+            }
+            Err(e) => {
+                eprintln!("finix-bootctl: warning: failed to parse boot entry {var:?}: {e}");
+                None
+            }
         })
         .collect();
 
@@ -210,6 +215,10 @@ fn cmd_create(
 }
 
 fn cmd_delete(mgr: &mut dyn VarManager, id: u16) {
+    if let Err(e) = mgr.delete(&Variable::new(&format!("Boot{id:04X}"))) {
+        die(format!("deleting Boot{id:04X}: {e}"));
+    }
+
     let mut order = match mgr.get_boot_order() {
         Ok(order) => order,
         Err(EfiError::VarNotFound { .. }) => Vec::new(),
@@ -221,10 +230,6 @@ fn cmd_delete(mgr: &mut dyn VarManager, id: u16) {
     if order.len() != before {
         mgr.set_boot_order(order)
             .unwrap_or_else(|e| die(format!("writing BootOrder: {e}")));
-    }
-
-    if let Err(e) = mgr.delete(&Variable::new(&format!("Boot{id:04X}"))) {
-        eprintln!("finix-bootctl: warning: could not delete Boot{id:04X}: {e}");
     }
 }
 
