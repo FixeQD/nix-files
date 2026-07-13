@@ -78,6 +78,7 @@
             finix.nixosModules.dhcpcd
             finix.nixosModules.sddm
             finix.nixosModules.zzz
+            finix.nixosModules.brightnessctl
             ./hosts/${hostname}/default.nix
           ]
           ++ extraModules;

@@ -11,6 +11,8 @@ let cfg = config.modules.desktop; in
       enable         = true;
     };
 
+    programs.brightnessctl.enable = true;
+
     programs.xwayland-satellite.enable = true;
 
     environment.sessionVariables = {

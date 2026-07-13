@@ -14,7 +14,6 @@
     wl-clipboard
     grim
     slurp
-    brightnessctl
     playerctl
     pamixer
     libnotify
