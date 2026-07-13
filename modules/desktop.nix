@@ -33,9 +33,6 @@ let cfg = config.modules.desktop; in
     };
 
     services.sddm.enable = true;
-    services.sddm.settings = {
-      Wayland.SessionDir = "/run/current-system/sw/share/wayland-sessions";
-    };
 
     services.dbus.packages = [ pkgs.dconf ];
 
