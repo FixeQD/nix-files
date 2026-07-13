@@ -92,7 +92,8 @@ in
   hardware.firmware = [ pkgs.sof-firmware pkgs.alsa-firmware ];
 
   hardware.graphics = {
-    enable = true;
+    enable    = true;
+    enable32Bit = true;
     extraPackages = with pkgs; [
       intel-media-driver
       intel-vaapi-driver

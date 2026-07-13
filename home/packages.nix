@@ -12,5 +12,6 @@
     ./packages/dev-tools.nix
     ./packages/system.nix
     ./packages/archives.nix
+    ./packages/games.nix
   ];
 }
