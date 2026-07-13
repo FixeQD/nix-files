@@ -12,8 +12,11 @@ let cfg = config.modules.mdevd; in
       nlgroups = 4;
     };
 
+    services.gardendevd.enable = true;
+
     environment.systemPackages = with pkgs; [
       mdevd
+      gardendevd
     ];
   };
 }

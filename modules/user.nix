@@ -45,8 +45,6 @@ in
 
     programs.sudo.enable = true;
 
-    services.udev.packages = [ pkgs.android-udev-rules ];
-
     finit.tasks.user-runtime-dir = {
       description = "Create ${cfg.name}'s XDG_RUNTIME_DIR";
       runlevels = "2345";
