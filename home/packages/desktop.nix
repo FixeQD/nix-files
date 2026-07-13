@@ -22,5 +22,7 @@
     kdePackages.kdeconnect-kde
     eww
     quickshell
+    rofi
+    anyrun
   ];
 }
