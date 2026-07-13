@@ -11,6 +11,8 @@ let cfg = config.modules.desktop; in
       enable         = true;
     };
 
+    programs.xwayland-satellite.enable = true;
+
     environment.sessionVariables = {
       WLR_NO_HARDWARE_CURSORS             = "1";
       LIBVA_DRIVER_NAME                   = "nvidia";
