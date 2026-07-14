@@ -37,11 +37,11 @@
     },
     "finix": {
       "locked": {
-        "lastModified": 1783811605,
-        "narHash": "sha256-qCzUfWJXOd/qkS/hRYeEsT9ODs0kmOSwcOhWtXE21Hw=",
+        "lastModified": 1783953932,
+        "narHash": "sha256-3nBKXi69G7cuHKXrlsIq8EpGfDj3/MUbCxzOYoMZUdg=",
         "owner": "FixeQD",
         "repo": "finix",
-        "rev": "6d1b51e96a32c4b7c420e93a95b2612fee68a832",
+        "rev": "b3656e9800f39db041d86a658c3fd335dafe1c71",
         "type": "github"
       },
       "original": {
