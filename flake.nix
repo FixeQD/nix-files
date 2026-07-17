@@ -5,8 +5,9 @@
     # TEMPORARY: On `master` branch
     nixpkgs.url = "github:NixOS/nixpkgs";
 
-    finix.url = "github:FixeQD/finix";
+    finix.url = "github:FixeQD/finix/dinit";
     community-modules.url = "github:FixeQD/finix-community-modules";
+    finix-dinit-modules.url = "github:willowispll/dinit-modules";
 
     disko = {
       url = "github:nix-community/disko";
@@ -39,6 +40,7 @@
       nixpkgs,
       finix,
       community-modules,
+      finix-dinit-modules,
       disko,
       sops-nix,
       zen-browser,
@@ -77,12 +79,14 @@
             ./modules/sops
             finix.nixosModules.bluetooth
             finix.nixosModules.docker
-            finix.nixosModules.getty
+            finix.nixosModules.dinit
+            finix-dinit-modules.nixosModules.getty
             finix.nixosModules.hyprland
             finix.nixosModules.xwayland-satellite
-            finix.nixosModules.nix-daemon
             finix.nixosModules.sudo
-            finix.nixosModules.sysklogd
+            finix-dinit-modules.nixosModules.sysklogd
+            finix-dinit-modules.nixosModules.mdevd
+            finix-dinit-modules.nixosModules.pid1
             finix.nixosModules.iwd
             finix.nixosModules.dhcpcd
             finix.nixosModules.sddm
@@ -90,6 +94,13 @@
             finix.nixosModules.brightnessctl
             finix.nixosModules.fwupd
             ./hosts/${hostname}/default.nix
+            {
+              finit.enable = false;
+              services.udev.enable = false;
+              services.mdevd-dinit.enable = true;
+              services.sysklogd-dinit.enable = true;
+              services.getty-dinit.enable = true;
+            }
           ]
           ++ extraModules;
         };

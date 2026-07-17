@@ -59,16 +59,32 @@
     },
     "finix": {
       "locked": {
-        "lastModified": 1784168557,
-        "narHash": "sha256-fwXkErK6rC0e3TA5CPpl+tApvX+NJoPcNdMsA6MgWg8=",
+        "lastModified": 1784311089,
+        "narHash": "sha256-PvpAWni3AovvSuBrwjoLw5sL7YxGg8EIw4ObSw5JpQw=",
         "owner": "FixeQD",
         "repo": "finix",
-        "rev": "91ed7542c3097003e7cd259ce0d6c45ee115ee8e",
+        "rev": "9c793fa17c4449de30ee1942d20afbe1e7169dbf",
         "type": "github"
       },
       "original": {
         "owner": "FixeQD",
+        "ref": "dinit",
         "repo": "finix",
+        "type": "github"
+      }
+    },
+    "finix-dinit-modules": {
+      "locked": {
+        "lastModified": 1784322499,
+        "narHash": "sha256-ec8ViFun5CzddnXkuQRGPh936u3lvCxJVR4FB83dOE8=",
+        "owner": "willowispll",
+        "repo": "dinit-modules",
+        "rev": "5966516e55592c2cb8f6d72f8dcade99b9d6c476",
+        "type": "github"
+      },
+      "original": {
+        "owner": "willowispll",
+        "repo": "dinit-modules",
         "type": "github"
       }
     },
@@ -109,6 +125,7 @@
         "community-modules": "community-modules",
         "disko": "disko",
         "finix": "finix",
+        "finix-dinit-modules": "finix-dinit-modules",
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix",
         "spicetify-nix": "spicetify-nix",

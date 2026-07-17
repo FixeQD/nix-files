@@ -24,10 +24,6 @@ let cfg = config.modules.cron; in
       "cron.d/fstrim".text = ''
         @monthly root ${pkgs.util-linux}/bin/fstrim -av
       '';
-
-      "cron.d/nix-gc".text = ''
-        0 4 1 * * root ${config.services.nix-daemon.package}/bin/nix-collect-garbage --delete-older-than 30d
-      '';
     };
 
     environment.systemPackages = [ pkgs.cronie ];
