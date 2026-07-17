@@ -69,6 +69,8 @@
     motherboard = "intel";
   };
 
+  services.fwupd.enable = true;
+
   home-manager.users.${config.modules.user.name} = {
     _module.args = {
       inherit zen-browser spicetify-nix awww;

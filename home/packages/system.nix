@@ -5,7 +5,6 @@
     ntfs3g
     wireguard-tools
     spicetify-cli
-    fwupd
     modprobed-db
     cpupower-gui
   ];

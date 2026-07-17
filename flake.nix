@@ -87,6 +87,7 @@
             finix.nixosModules.sddm
             finix.nixosModules.zzz
             finix.nixosModules.brightnessctl
+            finix.nixosModules.fwupd
             ./hosts/${hostname}/default.nix
           ]
           ++ extraModules;
