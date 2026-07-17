@@ -72,6 +72,7 @@
             community-modules.nixosModules.home-manager
             community-modules.nixosModules.pipewire
             community-modules.nixosModules.nix-ld
+            community-modules.nixosModules.openrgb
             ./modules/sops
             finix.nixosModules.bluetooth
             finix.nixosModules.docker

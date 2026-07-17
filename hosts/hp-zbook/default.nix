@@ -64,6 +64,11 @@
     zram.enable = true;
   };
 
+  services.hardware.openrgb = {
+    enable = true;
+    motherboard = "intel";
+  };
+
   home-manager.users.${config.modules.user.name} = {
     _module.args = {
       inherit zen-browser spicetify-nix awww;
