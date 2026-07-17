@@ -70,7 +70,8 @@
             { _module.args = { inherit zen-browser spicetify-nix awww; }; }
             disko.nixosModules.disko
             community-modules.nixosModules.home-manager
-            community-modules.nixosModules.pipewire
+            finix.nixosModules.pipewire
+            finix.nixosModules.wireplumber
             community-modules.nixosModules.nix-ld
             community-modules.nixosModules.openrgb
             ./modules/sops
