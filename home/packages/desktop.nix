@@ -1,7 +1,8 @@
-{ pkgs, zen-browser, ... }:
+{ pkgs, zen-browser, awww, ... }:
 {
   home.packages = with pkgs; [
     zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
+    awww.packages.${pkgs.stdenv.hostPlatform.system}.default
     waybar
     swaynotificationcenter
     hyprpicker

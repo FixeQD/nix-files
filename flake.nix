@@ -6,7 +6,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs";
 
     finix.url = "github:FixeQD/finix";
-    community-modules.url = "github:finix-community/community-modules";
+    community-modules.url = "github:FixeQD/finix-community-modules";
 
     disko = {
       url = "github:nix-community/disko";
@@ -27,6 +27,11 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    awww = {
+      url = "git+https://codeberg.org/LGFae/awww";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -38,6 +43,7 @@
       sops-nix,
       zen-browser,
       spicetify-nix,
+      awww,
       ...
     }:
     let
@@ -61,10 +67,11 @@
           inherit (pkgs) lib;
           modules = [
             { nixpkgs.pkgs = nixpkgs.lib.mkDefault pkgs; }
-            { _module.args = { inherit zen-browser spicetify-nix; }; }
+            { _module.args = { inherit zen-browser spicetify-nix awww; }; }
             disko.nixosModules.disko
             community-modules.nixosModules.home-manager
             community-modules.nixosModules.pipewire
+            community-modules.nixosModules.nix-ld
             ./modules/sops
             finix.nixosModules.bluetooth
             finix.nixosModules.docker
