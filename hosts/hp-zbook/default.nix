@@ -1,4 +1,4 @@
-{ config, zen-browser, spicetify-nix, ... }:
+{ config, zen-browser, spicetify-nix, pkgs, ... }:
 {
   imports = [
     ./hardware.nix
@@ -19,6 +19,7 @@
     ../../modules/bluetooth.nix
     ../../modules/yggdrasil.nix
     ../../modules/mdevd.nix
+    ../../modules/nix-ld.nix
   ];
 
   networking.hostName = "HP-ZBook";
@@ -35,6 +36,25 @@
     locale.enable = true;
     mdevd.enable = true;
     network.enable = true;
+    nix-ld.enable = true;
+
+    nix-ld.libraries = with pkgs; [
+      stdenv.cc.cc.lib
+      icu
+      openssl
+      gtk3
+      zlib
+      pango
+      harfbuzz
+      atk
+      cairo
+      gdk-pixbuf
+      glib
+      curl
+      libepoxy
+      fontconfig
+    ];
+
     performance.enable = true;
     security.enable = true;
     user.enable = true;

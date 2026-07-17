@@ -2,11 +2,11 @@
   "nodes": {
     "community-modules": {
       "locked": {
-        "lastModified": 1783708306,
-        "narHash": "sha256-2rnlxS2unziAhODwcrQJ5Yg2cReRSBVucsFH+g+OCLY=",
+        "lastModified": 1784125385,
+        "narHash": "sha256-McTnmfCE/IkPZDLWewezlg4w7k5fEK5caq2clxLs6+c=",
         "owner": "finix-community",
         "repo": "community-modules",
-        "rev": "06e70cbe852f61e3100cbda13f33660466f2ec54",
+        "rev": "9dfe8ae9df007c441abbe3184e531e70dffa05b0",
         "type": "github"
       },
       "original": {
@@ -37,11 +37,11 @@
     },
     "finix": {
       "locked": {
-        "lastModified": 1783953932,
-        "narHash": "sha256-3nBKXi69G7cuHKXrlsIq8EpGfDj3/MUbCxzOYoMZUdg=",
+        "lastModified": 1784168557,
+        "narHash": "sha256-fwXkErK6rC0e3TA5CPpl+tApvX+NJoPcNdMsA6MgWg8=",
         "owner": "FixeQD",
         "repo": "finix",
-        "rev": "b3656e9800f39db041d86a658c3fd335dafe1c71",
+        "rev": "91ed7542c3097003e7cd259ce0d6c45ee115ee8e",
         "type": "github"
       },
       "original": {
