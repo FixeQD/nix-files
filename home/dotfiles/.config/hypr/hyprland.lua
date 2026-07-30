@@ -16,6 +16,8 @@ hl.monitor({
 
 -- See https://wiki.hypr.land/Configuring/Basics/Autostart/
 hl.on("hyprland.start", function()
+    hl.exec_cmd("gpgconf --kill gpg-agent")
+    hl.exec_cmd("dbus-update-activation-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP DISPLAY")
     hl.exec_cmd("xwayland-satellite :1")
     hl.exec_cmd("waybar")
     hl.exec_cmd("awww-daemon --format xrgb")
@@ -24,7 +26,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("swaync")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("bash ~/.config/eww/scripts/start.sh")
-    hl.exec_cmd("dbus-update-activation-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP DISPLAY")
     hl.exec_cmd("bash ~/.config/hypr/scripts/nogaps.sh")
     hl.exec_cmd("polkit-kde-authentication-agent-1")
     hl.exec_cmd("pgrep -x kdeconnectd || kdeconnectd")

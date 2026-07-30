@@ -43,6 +43,14 @@
     maxCacheTtl = 7200;
   };
 
+  home.activation.fixGnupgPerms = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -d "${config.home.homeDirectory}/.gnupg" ]; then
+      chmod 700 "${config.home.homeDirectory}/.gnupg"
+      find "${config.home.homeDirectory}/.gnupg" -type f -exec chmod 600 {} \;
+      find "${config.home.homeDirectory}/.gnupg" -type d -exec chmod 700 {} \;
+    fi
+  '';
+
   # Import GPG keys on activation
   home.activation.importGpgKey = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     if [ -r "${osConfig.sops.secrets.auth_key_3.path}" ]; then
