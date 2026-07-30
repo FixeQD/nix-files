@@ -113,7 +113,7 @@ in
     efiSysMountPoint = "/boot";
   };
 
-  boot.loader.external = {
+  boot.loader.script = {
     enable = true;
     installHook = efistubHook;
   };

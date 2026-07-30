@@ -2,11 +2,15 @@
   description = "finix config";
 
   inputs = {
-    # TEMPORARY: On `master` branch
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     finix.url = "github:FixeQD/finix";
     community-modules.url = "github:FixeQD/finix-community-modules";
+
+    nyth = {
+      url = "github:FixeQD/nyth";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     disko = {
       url = "github:nix-community/disko";
@@ -44,6 +48,7 @@
       zen-browser,
       spicetify-nix,
       awww,
+      nyth,
       ...
     }:
     let
@@ -67,7 +72,7 @@
           inherit (pkgs) lib;
           modules = [
             { nixpkgs.pkgs = nixpkgs.lib.mkDefault pkgs; }
-            { _module.args = { inherit zen-browser spicetify-nix awww; }; }
+            { _module.args = { inherit zen-browser spicetify-nix awww nyth; }; }
             disko.nixosModules.disko
             community-modules.nixosModules.home-manager
             finix.nixosModules.pipewire

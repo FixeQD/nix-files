@@ -9,6 +9,7 @@
     ./zed.nix
     ./dotfiles.nix
     ./spicetify.nix
+    ./nyth.nix
   ];
 
   home = {

@@ -1,4 +1,4 @@
-{ config, zen-browser, spicetify-nix, awww, pkgs, ... }:
+{ config, zen-browser, spicetify-nix, awww, nyth, pkgs, ... }:
 {
   imports = [
     ./hardware.nix
@@ -20,6 +20,7 @@
     ../../modules/yggdrasil.nix
     ../../modules/mdevd.nix
     ../../modules/nix-ld.nix
+    ../../modules/nyth.nix
   ];
 
   networking.hostName = "HP-ZBook";
@@ -37,6 +38,7 @@
     mdevd.enable = true;
     network.enable = true;
     nix-ld.enable = true;
+    nyth.enable = true;
 
     nix-ld.libraries = with pkgs; [
       stdenv.cc.cc.lib
@@ -73,13 +75,14 @@
 
   home-manager.users.${config.modules.user.name} = {
     _module.args = {
-      inherit zen-browser spicetify-nix awww;
+      inherit zen-browser spicetify-nix awww nyth;
       username = config.modules.user.name;
     };
 
     imports = [
       ../../home/default.nix
       spicetify-nix.homeManagerModules.default
+      nyth.homeManagerModules.default
     ];
   };
 
