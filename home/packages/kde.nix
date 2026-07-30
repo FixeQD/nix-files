@@ -11,5 +11,6 @@
     kdePackages.kompare
     kdePackages.kwallet
     kdePackages.kwayland-integration
+    kdePackages.ark
   ];
 }
