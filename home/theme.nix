@@ -52,6 +52,19 @@
     };
   };
 
+  home.file.".config/kdeglobals".text = ''
+    [General]
+    ColorScheme=BreezeDark
+    Name=Breeze Dark
+    widgetStyle=Breeze
+
+    [KDE]
+    LookAndFeelPackage=org.kde.breezedark.desktop
+
+    [Icons]
+    Theme=breeze-dark
+  '';
+
   # ── dconf ──────────────────────────────────────────────────────────────────
   dconf.settings = {
     "org/gnome/desktop/interface" = {
