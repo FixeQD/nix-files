@@ -6,6 +6,7 @@
     ./theme.nix
     ./dconf-extra.nix
     ./secrets-keys.nix
+    ./xdg-mime.nix
     ./zed.nix
     ./dotfiles.nix
     ./spicetify.nix
