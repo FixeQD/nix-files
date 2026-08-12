@@ -92,15 +92,56 @@ let
     mapfile -t GENERATIONS < <("$FINIX" list)   # lines: "<id-hex> <timestamp>", newest first
     echo "==> ''${#GENERATIONS[@]} Finix generation(s) in NVRAM"
 
+    KEEP_TIMESTAMPS=()
+    for line in "''${GENERATIONS[@]:0:${toString keepGenerations}}"; do
+      KEEP_TIMESTAMPS+=("$(${pkgs.gawk}/bin/awk '{print $2}' <<<"$line")")
+    done
+
+    declare -A PRUNE_IDS
     if [ "''${#GENERATIONS[@]}" -gt "${toString keepGenerations}" ]; then
       for line in "''${GENERATIONS[@]:${toString keepGenerations}}"; do
         id=$(${pkgs.gawk}/bin/awk '{print $1}' <<<"$line")
         ts=$(${pkgs.gawk}/bin/awk '{print $2}' <<<"$line")
-        echo "==> Pruning old generation Boot$id (ts $ts)"
         "$FINIX" delete "$id"
-        rm -f "$BOOT_DIR/kernel-$ts.efi" "$BOOT_DIR/initrd-$ts"
+        PRUNE_IDS["$ts"]="$id"
       done
     fi
+
+    is_kept_timestamp() {
+      local needle="$1"
+      for ts in "''${KEEP_TIMESTAMPS[@]}"; do
+        [ "$ts" = "$needle" ] && return 0
+      done
+      return 1
+    }
+
+    is_seen_timestamp() {
+      local needle="$1"
+      for ts in "''${ORPHAN_TIMESTAMPS[@]}"; do
+        [ "$ts" = "$needle" ] && return 0
+      done
+      return 1
+    }
+
+    ORPHAN_TIMESTAMPS=()
+    for f in "$BOOT_DIR"/kernel-*.efi "$BOOT_DIR"/initrd-*; do
+      [ -e "$f" ] || continue
+      base=$(basename "$f")
+      file_ts="''${base#*-}"
+      file_ts="''${file_ts%.efi}"
+      if ! is_kept_timestamp "$file_ts" && ! is_seen_timestamp "$file_ts"; then
+        ORPHAN_TIMESTAMPS+=("$file_ts")
+      fi
+    done
+
+    for ts in "''${ORPHAN_TIMESTAMPS[@]}"; do
+      if [ -n "''${PRUNE_IDS[$ts]:-}" ]; then
+        echo "==> Removing orphaned ESP files kernel-$ts.efi + initrd-$ts (ts $ts, removed matching Boot''${PRUNE_IDS[$ts]} NVRAM entry)"
+      else
+        echo "==> Removing orphaned ESP files kernel-$ts.efi + initrd-$ts (ts $ts, no matching NVRAM entry)"
+      fi
+      rm -f "$BOOT_DIR/kernel-$ts.efi" "$BOOT_DIR/initrd-$ts"
+    done
 
     echo "==> EFISTUB setup complete"
   '';

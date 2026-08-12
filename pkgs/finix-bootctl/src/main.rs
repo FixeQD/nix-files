@@ -19,7 +19,17 @@ fn die(msg: impl std::fmt::Display) -> ! {
 }
 
 fn finix_timestamp(description: &str) -> Option<i64> {
-    description.strip_prefix(DESC_PREFIX)?.trim().parse().ok()
+    let rest = description.strip_prefix(DESC_PREFIX)?;
+    match rest.trim().parse() {
+        Ok(ts) => Some(ts),
+        Err(e) => {
+            // Description has our prefix but the remainder isn't a valid timestamp.
+            eprintln!(
+                "finix-bootctl: warning: entry {DESC_PREFIX:?}-prefixed but unparsable timestamp {rest:?}: {e}"
+            );
+            None
+        }
+    }
 }
 
 struct MountEntry {
@@ -63,8 +73,8 @@ fn resolve_partition(mount_point: &Path) -> (String, u32) {
         .unwrap_or_else(|| die(format!("no mount found for {}", mount_point.display())));
 
     let sys_link = format!("/sys/dev/block/{}:{}", entry.major, entry.minor);
-    let target = fs::read_link(&sys_link)
-        .unwrap_or_else(|e| die(format!("reading {sys_link}: {e}")));
+    let target =
+        fs::read_link(&sys_link).unwrap_or_else(|e| die(format!("reading {sys_link}: {e}")));
 
     let part_name = target
         .file_name()
@@ -75,7 +85,11 @@ fn resolve_partition(mount_point: &Path) -> (String, u32) {
     let disk_name = target
         .parent()
         .and_then(|p| p.file_name())
-        .unwrap_or_else(|| die(format!("malformed sysfs block symlink at {sys_link} (no parent)")))
+        .unwrap_or_else(|| {
+            die(format!(
+                "malformed sysfs block symlink at {sys_link} (no parent)"
+            ))
+        })
         .to_string_lossy()
         .into_owned();
 
@@ -90,16 +104,17 @@ fn resolve_partition(mount_point: &Path) -> (String, u32) {
 }
 
 fn read_logical_block_size(disk_name: &str) -> gpt::disk::LogicalBlockSize {
-    let raw: u64 = fs::read_to_string(format!(
-        "/sys/block/{disk_name}/queue/logical_block_size"
-    ))
-    .unwrap_or_else(|e| die(format!("reading logical_block_size for {disk_name}: {e}")))
-    .trim()
-    .parse()
-    .unwrap_or_else(|e| die(format!("parsing logical_block_size for {disk_name}: {e}")));
+    let raw: u64 = fs::read_to_string(format!("/sys/block/{disk_name}/queue/logical_block_size"))
+        .unwrap_or_else(|e| die(format!("reading logical_block_size for {disk_name}: {e}")))
+        .trim()
+        .parse()
+        .unwrap_or_else(|e| die(format!("parsing logical_block_size for {disk_name}: {e}")));
 
-    raw.try_into()
-        .unwrap_or_else(|_| die(format!("unsupported logical block size {raw} on {disk_name}")))
+    raw.try_into().unwrap_or_else(|_| {
+        die(format!(
+            "unsupported logical block size {raw} on {disk_name}"
+        ))
+    })
 }
 
 fn build_hard_drive(esp_mount_point: &Path) -> EFIHardDrive {
@@ -136,16 +151,19 @@ struct Generation {
 
 fn list_generations(mgr: &dyn VarManager) -> Vec<Generation> {
     let mut gens: Vec<Generation> = mgr
-        .get_boot_entries()
-        .unwrap_or_else(|e| die(format!("reading boot entries: {e}")))
-        .filter_map(|(res, var)| match res {
-            Ok(bv) => {
-                let ts = finix_timestamp(&bv.entry.description)?;
-                Some(Generation { id: bv.id, ts })
-            }
-            Err(e) => {
-                eprintln!("finix-bootctl: warning: failed to parse boot entry {var:?}: {e}");
-                None
+        .get_all_vars()
+        .unwrap_or_else(|e| die(format!("enumerating NVRAM variables: {e}")))
+        .filter_map(|var| {
+            let id = var.boot_var_id()?;
+            match BootEntry::read(mgr, &var) {
+                Ok(entry) => {
+                    let ts = finix_timestamp(&entry.description)?;
+                    Some(Generation { id, ts })
+                }
+                Err(e) => {
+                    eprintln!("finix-bootctl: warning: failed to parse boot entry {var:?}: {e}");
+                    None
+                }
             }
         })
         .collect();
@@ -201,13 +219,16 @@ fn cmd_create(
     mgr.add_boot_entry(id, entry)
         .unwrap_or_else(|e| die(format!("creating boot entry Boot{id:04X}: {e}")));
 
+    // Re-sync BootOrder with the true set of Finix generations
+    let known_finix_ids: Vec<u16> = list_generations(&*mgr).into_iter().map(|g| g.id).collect();
+
     let mut order = match mgr.get_boot_order() {
         Ok(order) => order,
         Err(EfiError::VarNotFound { .. }) => Vec::new(),
         Err(e) => die(format!("reading BootOrder: {e}")),
     };
-    order.retain(|&x| x != id);
-    order.insert(0, id);
+    order.retain(|x| !known_finix_ids.contains(x)); // keep non-Finix entries (USB, network, ...) as-is
+    order.splice(0..0, known_finix_ids);
     mgr.set_boot_order(order)
         .unwrap_or_else(|e| die(format!("writing BootOrder: {e}")));
 
