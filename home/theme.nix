@@ -5,7 +5,7 @@
     enable = true;
 
     theme = {
-      name = "Breeze";
+      name = "Breeze-Dark";
       package = pkgs.kdePackages.breeze-gtk;
     };
 
@@ -69,7 +69,7 @@
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       color-scheme = "prefer-dark";
-      gtk-theme = "Breeze";
+      gtk-theme = "Breeze-Dark";
       icon-theme = "breeze";
       cursor-theme = "Bibata-Modern-Ice";
       cursor-size = 24;
@@ -88,7 +88,7 @@
 
   # ── Cursor (system-wide przez X resources) ────────────────────────────────
   home.pointerCursor = {
-    name = "Bibata-Modern-Ice";
+    name = "Bibata-Modern-Classic";
     package = pkgs.bibata-cursors;
     size = 24;
     gtk.enable = true;
