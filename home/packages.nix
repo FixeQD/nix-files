@@ -13,5 +13,6 @@
     ./packages/system.nix
     ./packages/archives.nix
     ./packages/games.nix
+    ./packages/reverse-engineering.nix
   ];
 }

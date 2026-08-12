@@ -12,5 +12,6 @@
     kdePackages.kwallet
     kdePackages.kwayland-integration
     kdePackages.ark
+    kdePackages.kservice
   ];
 }

@@ -2,6 +2,7 @@
 {
   home.packages = with pkgs; [
     zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
+    xdg-utils
     awww.packages.${pkgs.stdenv.hostPlatform.system}.default
     waybar
     swaynotificationcenter

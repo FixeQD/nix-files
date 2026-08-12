@@ -4,5 +4,6 @@
     bun
     typescript-language-server
     eslint
+    nodejs
   ];
 }

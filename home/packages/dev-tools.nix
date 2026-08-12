@@ -7,5 +7,7 @@
     android-tools
     opencode
     lmstudio
+    gnumake
+    perl
   ];
 }

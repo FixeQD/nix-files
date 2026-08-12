@@ -35,6 +35,7 @@ let cfg = config.modules.base; in
       nixd
       nixos-rebuild-ng
       nil
+      nh
     ];
 
     users.defaultUserShell = pkgs.fish;
