@@ -75,6 +75,7 @@
             { _module.args = { inherit zen-browser spicetify-nix awww nyth; }; }
             disko.nixosModules.disko
             community-modules.nixosModules.home-manager
+            community-modules.nixosModules.tailscale
             finix.nixosModules.pipewire
             finix.nixosModules.wireplumber
             community-modules.nixosModules.nix-ld
@@ -83,6 +84,7 @@
             finix.nixosModules.bluetooth
             finix.nixosModules.docker
             finix.nixosModules.getty
+            finix.nixosModules.openssh
             finix.nixosModules.hyprland
             finix.nixosModules.xwayland-satellite
             finix.nixosModules.nix-daemon

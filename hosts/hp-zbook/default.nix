@@ -37,8 +37,13 @@
     locale.enable = true;
     mdevd.enable = true;
     network.enable = true;
+    network.tailscale.enable = true;
+
+    network.openssh.enable = true;
+    network.openssh.permitRootLogin = "no";
+
     nix-ld.enable = true;
-    nyth.enable = true;
+    nyth.enable = false;
 
     nix-ld.libraries = with pkgs; [
       stdenv.cc.cc.lib
