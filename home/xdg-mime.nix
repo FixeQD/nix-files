@@ -57,12 +57,10 @@
   };
 
   home.activation.updateDesktopDb = config.lib.dag.entryAfter [ "writeBoundary" ] ''
-    export PATH="${pkgs.desktop-file-utils}/bin:${pkgs.shared-mime-info}/bin:$PATH"
-    if [ -d "$HOME/.nix-profile/share/applications" ]; then
-      update-desktop-database "$HOME/.nix-profile/share/applications" 2>/dev/null || true
-    fi
-    if [ -d "$HOME/.nix-profile/share/mime" ]; then
-      update-mime-database "$HOME/.nix-profile/share/mime" 2>/dev/null || true
-    fi
+    export PATH="${pkgs.desktop-file-utils}/bin:${pkgs.shared-mime-info}/bin:${pkgs.kdePackages.kservice}/bin:$PATH"
+    mkdir -p "$HOME/.local/share/applications" "$HOME/.local/share/mime"
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+    update-mime-database "$HOME/.local/share/mime" 2>/dev/null || true
+    kbuildsycoca6 --noincremental 2>/dev/null || true
   '';
 }
