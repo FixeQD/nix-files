@@ -1,4 +1,4 @@
-{ config, zen-browser, spicetify-nix, awww, nyth, pkgs, ... }:
+{ config, zen-browser, spicetify-nix, nyth, noctalia, pkgs, nixcord, ... }:
 {
   imports = [
     ./hardware.nix
@@ -21,6 +21,7 @@
     ../../modules/mdevd.nix
     ../../modules/nix-ld.nix
     ../../modules/nyth.nix
+    ../../modules/ollama.nix
   ];
 
   networking.hostName = "HP-ZBook";
@@ -60,6 +61,9 @@
       curl
       libepoxy
       fontconfig
+
+      cudaPackages.cuda_cudart
+      nvidia-container-toolkit
     ];
 
     performance.enable = true;
@@ -69,6 +73,12 @@
     virt.enable = true;
     yggdrasil.enable = true;
     zram.enable = true;
+    ollama.enable = true;
+  };
+
+  networking.hosts = {
+    "127.0.0.1" = [ "localhost" ];
+    "127.0.0.2" = [ "HP-ZBook" ];
   };
 
   services.hardware.openrgb = {
@@ -80,7 +90,7 @@
 
   home-manager.users.${config.modules.user.name} = {
     _module.args = {
-      inherit zen-browser spicetify-nix awww nyth;
+      inherit zen-browser spicetify-nix nyth noctalia;
       username = config.modules.user.name;
     };
 
@@ -88,6 +98,8 @@
       ../../home/default.nix
       spicetify-nix.homeManagerModules.default
       nyth.homeManagerModules.default
+      noctalia.homeModules.default
+      nixcord.homeModules.nixcord
     ];
   };
 

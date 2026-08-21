@@ -7,6 +7,8 @@
     finix.url = "github:FixeQD/finix";
     community-modules.url = "github:FixeQD/finix-community-modules";
 
+    nixcord.url = "github:4evy/nixcord";
+
     nyth = {
       url = "github:FixeQD/nyth";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -32,8 +34,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    awww = {
-      url = "git+https://codeberg.org/LGFae/awww";
+    noctalia = {
+      url = "github:noctalia-dev/noctalia";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -47,8 +49,9 @@
       sops-nix,
       zen-browser,
       spicetify-nix,
-      awww,
       nyth,
+      noctalia,
+      nixcord,
       ...
     }:
     let
@@ -72,7 +75,7 @@
           inherit (pkgs) lib;
           modules = [
             { nixpkgs.pkgs = nixpkgs.lib.mkDefault pkgs; }
-            { _module.args = { inherit zen-browser spicetify-nix awww nyth; }; }
+            { _module.args = { inherit zen-browser spicetify-nix nyth noctalia nixcord; }; }
             disko.nixosModules.disko
             community-modules.nixosModules.home-manager
             community-modules.nixosModules.tailscale
@@ -86,6 +89,7 @@
             finix.nixosModules.getty
             finix.nixosModules.openssh
             finix.nixosModules.hyprland
+            finix.nixosModules.niri
             finix.nixosModules.xwayland-satellite
             finix.nixosModules.nix-daemon
             finix.nixosModules.sudo
@@ -96,6 +100,7 @@
             finix.nixosModules.zzz
             finix.nixosModules.brightnessctl
             finix.nixosModules.fwupd
+            finix.nixosModules.upower
             ./hosts/${hostname}/default.nix
           ]
           ++ extraModules;

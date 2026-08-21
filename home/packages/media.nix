@@ -4,6 +4,5 @@
     mpv
     yt-dlp
     qview
-    discord
   ];
 }

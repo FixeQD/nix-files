@@ -5,4 +5,7 @@
     source = ./dotfiles/.config;
     recursive = true;
   };
+  home.file.".wallpaper.jpg" = {
+    source = ./dotfiles/.wallpaper.jpg;
+  };
 }

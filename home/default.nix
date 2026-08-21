@@ -11,6 +11,8 @@
     ./dotfiles.nix
     ./spicetify.nix
     ./nyth.nix
+    ./noctalia.nix
+    ./nixcord.nix
   ];
 
   home = {

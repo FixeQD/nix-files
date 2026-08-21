@@ -185,12 +185,9 @@ in
     options nvidia NVreg_PreserveVideoMemoryAllocations=1
   '';
 
-  # TEMPORARY: Enable emergency access for debugging purposes
-  boot.initrd.emergencyAccess = true;
-
   boot.kernelParams = [
-#    "quiet"
-#    "loglevel=3"
+    "quiet"
+    "loglevel=3"
     "rootflags=subvol=${rootSubvol}"
     "rootfstype=${rootFsType}"
     "zswap.enabled=0"

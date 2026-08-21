@@ -72,10 +72,8 @@ in
   hardware.nvidia = {
     enable = true;
     modesetting.enable = true;
-    powerManagement.enable = true;
-    powerManagement.finegrained = false;
-    open = false;
-    nvidiaSettings = false;
+    kernelModule = "open";
+    power.suspend.enable = true;
 
     prime = {
       offload = {

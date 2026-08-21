@@ -1,5 +1,14 @@
-{ config, pkgs, ... }:
+{ config, pkgs, zen-browser, ... }:
 {
+  home.packages = [
+    (pkgs.writeShellScriptBin "x-terminal-emulator" ''
+      exec ${pkgs.ghostty}/bin/ghostty "$@"
+    '')
+    (pkgs.writeShellScriptBin "www-browser" ''
+      exec ${zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/zen "$@"
+    '')
+  ];
+
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
