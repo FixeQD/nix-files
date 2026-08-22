@@ -179,11 +179,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784510786,
-        "narHash": "sha256-IchPJulwc4wGyIsv+oohZJLnhpTTDUfs5X7aZz9oJxM=",
+        "lastModified": 1787418983,
+        "narHash": "sha256-12YjiUzC/pvXwt1GqaHwHa5L9DRl1IqMq00XWGMIuqs=",
         "owner": "FixeQD",
         "repo": "nyth",
-        "rev": "a2f5b6e82788022829038b17bbb1306ef3689815",
+        "rev": "9d2f87464f612a1c63cf8e814307cd4f757ce29b",
         "type": "github"
       },
       "original": {
