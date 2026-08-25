@@ -12,6 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 efivar = { version = "2", features = ["store"] }
+eros = "0.7"
 gpt = "4"
 uuid = { version = "1", features = ["v4"] }
 

@@ -12,6 +12,7 @@ use efivar::boot::{
 use efivar::efi::Variable;
 use efivar::store::MemoryStore;
 use efivar::{Error as EfiError, VarManager};
+use eros::Context;
 use uuid::Uuid;
 
 pub const DESC_PREFIX: &str = "Finix";
@@ -66,9 +67,12 @@ pub struct Generation {
 }
 
 pub fn list_generations(mgr: &dyn VarManager) -> Vec<Generation> {
-    let mut gens: Vec<Generation> = mgr
-        .get_all_vars()
-        .unwrap_or_else(|e| die(format!("enumerating NVRAM variables: {e}")))
+    try_list_generations(mgr).unwrap_or_else(|e| die(format!("enumerating NVRAM variables: {e}")))
+}
+
+pub fn try_list_generations(mgr: &dyn VarManager) -> eros::Result<Vec<Generation>> {
+    let vars = mgr.get_all_vars().context("enumerating NVRAM variables")?;
+    let mut gens: Vec<Generation> = vars
         .filter_map(|var| {
             let id = var.boot_var_id()?;
             match BootEntry::read(mgr, &var) {
@@ -85,27 +89,37 @@ pub fn list_generations(mgr: &dyn VarManager) -> Vec<Generation> {
         .collect();
 
     gens.sort_by_key(|b| std::cmp::Reverse(b.ts));
-    gens
+    Ok(gens)
 }
 
 /// Format generations without printing.
 pub fn list_generations_formatted(mgr: &dyn VarManager) -> Vec<String> {
-    list_generations(mgr)
+    try_list_generations_formatted(mgr)
+        .unwrap_or_else(|e| die(format!("formatting generations: {e}")))
+}
+
+pub fn try_list_generations_formatted(mgr: &dyn VarManager) -> eros::Result<Vec<String>> {
+    Ok(try_list_generations(mgr)?
         .into_iter()
         .map(|g| format!("{:04X} {}", g.id, g.ts))
-        .collect()
+        .collect())
 }
 
 pub fn find_free_id(mgr: &dyn VarManager) -> u16 {
+    try_find_free_id(mgr).unwrap_or_else(|e| die(format!("finding free id: {e}")))
+}
+
+pub fn try_find_free_id(mgr: &dyn VarManager) -> eros::Result<u16> {
     for id in 0u16..=0xFFFF {
         let var = Variable::new(&format!("Boot{id:04X}"));
-        match mgr.exists(&var) {
-            Ok(false) => return id,
-            Ok(true) => continue,
-            Err(e) => die(format!("checking Boot{id:04X}: {e}")),
+        let exists = mgr
+            .exists(&var)
+            .with_context(|| format!("checking Boot{id:04X}"))?;
+        if !exists {
+            return Ok(id);
         }
     }
-    die("no free Boot#### slot left")
+    Err(eros::error!("no free Boot#### slot left"))
 }
 
 /// Build BootEntry without disk access.
@@ -115,7 +129,20 @@ pub fn build_boot_entry(
     optional_data: &str,
     timestamp: i64,
 ) -> BootEntry {
-    BootEntry {
+    try_build_boot_entry(hard_drive, loader_path, optional_data, timestamp)
+        .unwrap_or_else(|e| die(format!("building boot entry: {e}")))
+}
+
+pub fn try_build_boot_entry(
+    hard_drive: EFIHardDrive,
+    loader_path: &str,
+    optional_data: &str,
+    timestamp: i64,
+) -> eros::Result<BootEntry> {
+    if loader_path.is_empty() {
+        return Err(eros::error!("loader_path must not be empty"));
+    }
+    Ok(BootEntry {
         attributes: BootEntryAttributes::LOAD_OPTION_ACTIVE,
         description: format!("{DESC_PREFIX}{timestamp}"),
         file_path_list: Some(FilePathList {
@@ -128,7 +155,7 @@ pub fn build_boot_entry(
             .encode_utf16()
             .flat_map(|c| c.to_le_bytes())
             .collect(),
-    }
+    })
 }
 
 /// Create logic using injected EFIHardDrive.
@@ -139,71 +166,130 @@ pub fn cmd_create_with_hard_drive(
     optional_data: &str,
     timestamp: i64,
 ) -> u16 {
-    let entry = build_boot_entry(hard_drive, loader_path, optional_data, timestamp);
-    let id = find_free_id(&*mgr);
-    mgr.add_boot_entry(id, entry)
-        .unwrap_or_else(|e| die(format!("creating boot entry Boot{id:04X}: {e}")));
+    try_cmd_create_with_hard_drive(mgr, hard_drive, loader_path, optional_data, timestamp)
+        .unwrap_or_else(|e| die(format!("creating boot entry: {e}")))
+}
 
-    let known_finix_ids: Vec<u16> = list_generations(&*mgr).into_iter().map(|g| g.id).collect();
+pub fn try_cmd_create_with_hard_drive(
+    mgr: &mut dyn VarManager,
+    hard_drive: EFIHardDrive,
+    loader_path: &str,
+    optional_data: &str,
+    timestamp: i64,
+) -> eros::Result<u16> {
+    let entry = try_build_boot_entry(hard_drive, loader_path, optional_data, timestamp)?;
+    let id = try_find_free_id(&*mgr)?;
+    mgr.add_boot_entry(id, entry)
+        .with_context(|| format!("creating boot entry Boot{id:04X}"))?;
+
+    let known_finix_ids: Vec<u16> = try_list_generations(&*mgr)?
+        .into_iter()
+        .map(|g| g.id)
+        .collect();
 
     let mut order = match mgr.get_boot_order() {
         Ok(order) => order,
         Err(EfiError::VarNotFound { .. }) => Vec::new(),
-        Err(e) => die(format!("reading BootOrder: {e}")),
+        Err(e) => return Err(eros::error!(e).context("reading BootOrder")),
     };
     order.retain(|x| !known_finix_ids.contains(x));
     order.splice(0..0, known_finix_ids);
-    mgr.set_boot_order(order)
-        .unwrap_or_else(|e| die(format!("writing BootOrder: {e}")));
+    mgr.set_boot_order(order).context("writing BootOrder")?;
 
-    id
+    Ok(id)
 }
 
 // Mock / simulation helpers - NVRAM / boot (MemoryStore)
 
-/// Dummy GPT disk - deterministic UUID and LBA params, format 0x02 / Gpt.
-pub fn dummy_hard_drive(partition_number: u32) -> EFIHardDrive {
-    EFIHardDrive {
+pub fn try_dummy_hard_drive(partition_number: u32) -> eros::Result<EFIHardDrive> {
+    let sig =
+        Uuid::parse_str("12345678-1234-1234-1234-123456789abc").context("parsing dummy UUID")?;
+    Ok(EFIHardDrive {
         partition_number,
         partition_start: 2048 + (partition_number as u64 * 1000),
         partition_size: 100_000,
-        partition_sig: Uuid::parse_str("12345678-1234-1234-1234-123456789abc").unwrap(),
+        partition_sig: sig,
         format: 0x02,
         sig_type: EFIHardDriveType::Gpt,
-    }
+    })
 }
 
-pub fn dummy_hard_drive_with_sig(partition_number: u32, sig: Uuid) -> EFIHardDrive {
-    EFIHardDrive {
+pub fn dummy_hard_drive(partition_number: u32) -> EFIHardDrive {
+    try_dummy_hard_drive(partition_number).unwrap_or_else(|e| die(format!("dummy_hard_drive: {e}")))
+}
+
+pub fn try_dummy_hard_drive_with_sig(
+    partition_number: u32,
+    sig: Uuid,
+) -> eros::Result<EFIHardDrive> {
+    if sig.is_nil() {
+        return Err(eros::error!("partition sig must not be nil"));
+    }
+    Ok(EFIHardDrive {
         partition_number,
         partition_start: 2048,
         partition_size: 50000,
         partition_sig: sig,
         format: 0x02,
         sig_type: EFIHardDriveType::Gpt,
-    }
+    })
 }
 
-pub fn make_finix_entry(ts: i64, partition_number: u32, loader: &str, optional: &str) -> BootEntry {
-    BootEntry {
+pub fn dummy_hard_drive_with_sig(partition_number: u32, sig: Uuid) -> EFIHardDrive {
+    try_dummy_hard_drive_with_sig(partition_number, sig)
+        .unwrap_or_else(|e| die(format!("dummy_hard_drive_with_sig: {e}")))
+}
+
+pub fn try_make_finix_entry(
+    ts: i64,
+    partition_number: u32,
+    loader: &str,
+    optional: &str,
+) -> eros::Result<BootEntry> {
+    let hd = try_dummy_hard_drive(partition_number)?;
+    Ok(BootEntry {
         attributes: BootEntryAttributes::LOAD_OPTION_ACTIVE,
         description: format!("Finix{ts}"),
         file_path_list: Some(FilePathList {
             file_path: FilePath {
                 path: loader.to_string(),
             },
-            hard_drive: dummy_hard_drive(partition_number),
+            hard_drive: hd,
         }),
         optional_data: optional
             .encode_utf16()
             .flat_map(|c| c.to_le_bytes())
             .collect(),
-    }
+    })
+}
+
+pub fn make_finix_entry(ts: i64, partition_number: u32, loader: &str, optional: &str) -> BootEntry {
+    try_make_finix_entry(ts, partition_number, loader, optional)
+        .unwrap_or_else(|e| die(format!("make_finix_entry: {e}")))
+}
+
+pub fn try_insert_finix(mgr: &mut MemoryStore, id: u16, ts: i64) -> eros::Result<()> {
+    let entry = try_make_finix_entry(ts, 1, "\\EFI\\Finix\\bootx64.efi", "")?;
+    mgr.add_boot_entry(id, entry)
+        .with_context(|| format!("inserting Finix entry Boot{id:04X} ts={ts}"))?;
+    Ok(())
 }
 
 pub fn insert_finix(mgr: &mut MemoryStore, id: u16, ts: i64) {
-    let entry = make_finix_entry(ts, 1, "\\EFI\\Finix\\bootx64.efi", "");
-    mgr.add_boot_entry(id, entry).unwrap();
+    try_insert_finix(mgr, id, ts).unwrap_or_else(|e| die(format!("{e}")))
+}
+
+pub fn try_insert_finix_with_loader(
+    mgr: &mut MemoryStore,
+    id: u16,
+    ts: i64,
+    loader: &str,
+    optional: &str,
+) -> eros::Result<()> {
+    let entry = try_make_finix_entry(ts, 1, loader, optional)?;
+    mgr.add_boot_entry(id, entry)
+        .with_context(|| format!("inserting Finix entry Boot{id:04X} loader={loader:?}"))?;
+    Ok(())
 }
 
 pub fn insert_finix_with_loader(
@@ -213,11 +299,14 @@ pub fn insert_finix_with_loader(
     loader: &str,
     optional: &str,
 ) {
-    let entry = make_finix_entry(ts, 1, loader, optional);
-    mgr.add_boot_entry(id, entry).unwrap();
+    try_insert_finix_with_loader(mgr, id, ts, loader, optional)
+        .unwrap_or_else(|e| die(format!("{e}")))
 }
 
-pub fn insert_non_finix(mgr: &mut MemoryStore, id: u16, desc: &str) {
+pub fn try_insert_non_finix(mgr: &mut MemoryStore, id: u16, desc: &str) -> eros::Result<()> {
+    if desc.is_empty() {
+        return Err(eros::error!("non-Finix description must not be empty"));
+    }
     let entry = BootEntry {
         attributes: BootEntryAttributes::LOAD_OPTION_ACTIVE,
         description: desc.to_string(),
@@ -225,49 +314,85 @@ pub fn insert_non_finix(mgr: &mut MemoryStore, id: u16, desc: &str) {
             file_path: FilePath {
                 path: "\\EFI\\Other\\boot.efi".to_string(),
             },
-            hard_drive: dummy_hard_drive(1),
+            hard_drive: try_dummy_hard_drive(1)?,
         }),
         optional_data: vec![],
     };
-    mgr.add_boot_entry(id, entry).unwrap();
+    mgr.add_boot_entry(id, entry)
+        .with_context(|| format!("inserting non-Finix entry Boot{id:04X} desc={desc:?}"))?;
+    Ok(())
+}
+
+pub fn insert_non_finix(mgr: &mut MemoryStore, id: u16, desc: &str) {
+    try_insert_non_finix(mgr, id, desc).unwrap_or_else(|e| die(format!("{e}")))
+}
+
+pub fn try_boot_order(mgr: &MemoryStore) -> eros::Result<Vec<u16>> {
+    Ok(mgr.get_boot_order().context("reading BootOrder")?)
 }
 
 pub fn boot_order(mgr: &MemoryStore) -> Vec<u16> {
-    mgr.get_boot_order().unwrap_or_default()
+    try_boot_order(mgr).unwrap_or_default()
+}
+
+pub fn try_set_boot_order(mgr: &mut MemoryStore, order: Vec<u16>) -> eros::Result<()> {
+    let order_clone = order.clone();
+    mgr.set_boot_order(order)
+        .with_context(|| format!("writing BootOrder {order_clone:?}"))?;
+    Ok(())
 }
 
 pub fn set_boot_order(mgr: &mut MemoryStore, order: Vec<u16>) {
-    mgr.set_boot_order(order).unwrap();
+    try_set_boot_order(mgr, order).unwrap_or_else(|e| die(format!("{e}")))
 }
 
-/// Simulate UEFI firmware selection: iterate `BootOrder`, return first `BootEntry`
-/// that exists and has `LOAD_OPTION_ACTIVE`.
-pub fn simulate_boot(mgr: &dyn VarManager) -> Option<(u16, BootEntry)> {
+pub fn try_simulate_boot(mgr: &dyn VarManager) -> eros::Result<Option<(u16, BootEntry)>> {
     let order = match mgr.get_boot_order() {
         Ok(o) => o,
-        Err(_) => return None,
+        Err(EfiError::VarNotFound { .. }) => return Ok(None),
+        Err(e) => return Err(eros::error!(e).context("reading BootOrder for simulate_boot")),
     };
     for id in order {
         let var = Variable::new(&format!("Boot{id:04X}"));
-        if let Ok(entry) = BootEntry::read(mgr, &var) {
-            if entry
-                .attributes
-                .contains(BootEntryAttributes::LOAD_OPTION_ACTIVE)
+        match BootEntry::read(mgr, &var) {
+            Ok(entry)
+                if entry
+                    .attributes
+                    .contains(BootEntryAttributes::LOAD_OPTION_ACTIVE) =>
             {
-                return Some((id, entry));
+                return Ok(Some((id, entry)))
+            }
+            Ok(_) => continue,
+            Err(e) => {
+                eprintln!("finix-bootctl: warning: failed to parse boot entry {var:?}: {e}");
+                continue;
             }
         }
     }
-    None
+    Ok(None)
 }
 
-/// Simulate Finix-aware selection: pick newest generation from `list_generations`.
+pub fn simulate_boot(mgr: &dyn VarManager) -> Option<(u16, BootEntry)> {
+    try_simulate_boot(mgr).unwrap_or_else(|e| {
+        eprintln!("finix-bootctl: warning: simulate_boot failed: {e}");
+        None
+    })
+}
+
+pub fn try_simulate_finix_boot(mgr: &dyn VarManager) -> eros::Result<Option<(u16, i64)>> {
+    Ok(try_list_generations(mgr)?
+        .into_iter()
+        .next()
+        .map(|g| (g.id, g.ts)))
+}
+
 pub fn simulate_finix_boot(mgr: &dyn VarManager) -> Option<(u16, i64)> {
-    let gens = list_generations(mgr);
-    gens.into_iter().next().map(|g: Generation| (g.id, g.ts))
+    try_simulate_finix_boot(mgr).unwrap_or_else(|e| {
+        eprintln!("finix-bootctl: warning: simulate_finix_boot failed: {e}");
+        None
+    })
 }
 
-// Workaround: tests outside `src/` - `tests/` next to `src/`
 #[cfg(test)]
 #[path = "../tests/mod.rs"]
 mod tests;
