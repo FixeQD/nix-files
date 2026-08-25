@@ -24,5 +24,7 @@ in
     auth_key_2 = { owner = user; mode = "0644"; };
     auth_key_3 = { owner = user; };
     auth_key_4 = { owner = user; };
+
+    cloudflared_tunnel_token = { owner = user; mode = "0600"; };
   };
 }

@@ -17,6 +17,8 @@ let cfg = config.modules.desktop; in
 
     programs.xwayland-satellite.enable = true;
 
+    programs.fastfetch.enable = true;
+
     environment = {
       variables = {
         WLR_NO_HARDWARE_CURSORS             = "1";

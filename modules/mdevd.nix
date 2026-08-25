@@ -13,6 +13,7 @@ let cfg = config.modules.mdevd; in
     };
 
     services.gardendevd.enable = true;
+    services.gardendevd.debug = true;
 
     environment.systemPackages = with pkgs; [
       mdevd

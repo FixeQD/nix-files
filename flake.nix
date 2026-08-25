@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     finix.url = "github:FixeQD/finix";
-    community-modules.url = "github:FixeQD/finix-community-modules";
+    community-modules.url = "github:finix-community/community-modules";
 
     nixcord.url = "github:4evy/nixcord";
 
@@ -83,6 +83,7 @@
             finix.nixosModules.wireplumber
             community-modules.nixosModules.nix-ld
             community-modules.nixosModules.openrgb
+            community-modules.nixosModules.fastfetch
             ./modules/sops
             finix.nixosModules.bluetooth
             finix.nixosModules.docker
@@ -90,6 +91,7 @@
             finix.nixosModules.openssh
             finix.nixosModules.hyprland
             finix.nixosModules.niri
+            community-modules.nixosModules.bootchart
             finix.nixosModules.xwayland-satellite
             finix.nixosModules.nix-daemon
             finix.nixosModules.sudo

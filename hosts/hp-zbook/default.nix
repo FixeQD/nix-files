@@ -8,6 +8,7 @@
     ../../modules/locale.nix
     ../../modules/network.nix
     ../../modules/cron.nix
+    ../../modules/cloudflared.nix
     ../../modules/performance.nix
     ../../modules/zram.nix
     ../../modules/audio.nix
@@ -34,6 +35,8 @@
     base.enable = true;
     bluetooth.enable = true;
     cron.enable = true;
+    cloudflared.enable = true;
+    cloudflared.tokenFile = config.sops.secrets.cloudflared_tunnel_token.path;
     desktop.enable = true;
     locale.enable = true;
     mdevd.enable = true;

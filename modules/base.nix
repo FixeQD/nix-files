@@ -18,7 +18,6 @@ let cfg = config.modules.base; in
       man-pages
       less
       btop
-      fastfetch
       usbutils
       pciutils
       lshw
@@ -42,6 +41,9 @@ let cfg = config.modules.base; in
     ];
 
     users.defaultUserShell = pkgs.fish;
+
+    services.bootchart.enable = true;
+    services.bootchart.stop.conditions = [ "service/sddm/ready" ];
 
     services.nix-daemon = {
       enable = true;

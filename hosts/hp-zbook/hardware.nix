@@ -65,6 +65,11 @@ in
     options = [ "rw" "nosuid" "nodev" "relatime" "size=4G" "mode=1777" ];
   };
 
+  programs.modprobe.blacklist = [
+    "fjes"
+    "spi_nor"
+  ];
+
   # ── GPU: NVIDIA Quadro T2000 + Intel UHD 630 (Optimus) ─────────────────────
 
   programs.zzz.enable = true;
@@ -85,8 +90,8 @@ in
     };
   };
 
-  # TEMP: pkgs.microcode-intel currently fails to build on this nixpkgs
-  # pin (unpack phase: "find: 'lib/firmware': No such file or directory").
+  hardware.cpu.intel.updateMicrocode = true;
+
   hardware.firmware = [ pkgs.sof-firmware pkgs.alsa-firmware ];
 
   hardware.graphics = {

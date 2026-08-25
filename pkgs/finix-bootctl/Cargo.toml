@@ -4,14 +4,16 @@ version = "0.1.0"
 edition = "2021"
 description = "Manage Finix EFISTUB boot entries via efivar/gpt instead of efibootmgr"
 license = "GPL-3.0-only"
+autotests = false
 
 [[bin]]
 name = "finix-bootctl"
 path = "src/main.rs"
 
 [dependencies]
-efivar = "2"
+efivar = { version = "2", features = ["store"] }
 gpt = "4"
+uuid = { version = "1", features = ["v4"] }
 
 [profile.release]
 lto = "fat"

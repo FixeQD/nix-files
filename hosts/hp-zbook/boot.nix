@@ -186,8 +186,6 @@ in
   '';
 
   boot.kernelParams = [
-    "quiet"
-    "loglevel=3"
     "rootflags=subvol=${rootSubvol}"
     "rootfstype=${rootFsType}"
     "zswap.enabled=0"

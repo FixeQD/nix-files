@@ -2,61 +2,20 @@
 
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::ExitCode;
 
-use efivar::boot::{
-    BootEntry, BootEntryAttributes, EFIHardDrive, EFIHardDriveType, FilePath, FilePathList,
-};
+use efivar::boot::{EFIHardDrive, EFIHardDriveType};
 use efivar::efi::Variable;
 use efivar::{Error as EfiError, VarManager};
 
-const DESC_PREFIX: &str = "Finix";
+pub mod testtoolkit;
+use testtoolkit::{die, list_generations, parse_mountinfo_from_str};
 
-fn die(msg: impl std::fmt::Display) -> ! {
-    eprintln!("finix-bootctl: {msg}");
-    std::process::exit(1);
-}
-
-fn finix_timestamp(description: &str) -> Option<i64> {
-    let rest = description.strip_prefix(DESC_PREFIX)?;
-    match rest.trim().parse() {
-        Ok(ts) => Some(ts),
-        Err(e) => {
-            // Description has our prefix but the remainder isn't a valid timestamp.
-            eprintln!(
-                "finix-bootctl: warning: entry {DESC_PREFIX:?}-prefixed but unparsable timestamp {rest:?}: {e}"
-            );
-            None
-        }
-    }
-}
-
-struct MountEntry {
-    mount_point: PathBuf,
-    major: u32,
-    minor: u32,
-}
-
-fn parse_mountinfo() -> Vec<MountEntry> {
+fn parse_mountinfo() -> Vec<testtoolkit::MountEntry> {
     let content = fs::read_to_string("/proc/self/mountinfo")
         .unwrap_or_else(|e| die(format!("reading /proc/self/mountinfo: {e}")));
-
-    content
-        .lines()
-        .filter_map(|line| {
-            // Format: id parent major:minor root mount_point opts... - fstype source super_opts
-            let (pre, _post) = line.split_once(" - ")?;
-            let fields: Vec<&str> = pre.split(' ').collect();
-            let majmin = fields.get(2)?;
-            let (major, minor) = majmin.split_once(':')?;
-            Some(MountEntry {
-                mount_point: PathBuf::from(*fields.get(4)?),
-                major: major.parse().ok()?,
-                minor: minor.parse().ok()?,
-            })
-        })
-        .collect()
+    parse_mountinfo_from_str(&content)
 }
 
 fn resolve_partition(mount_point: &Path) -> (String, u32) {
@@ -144,50 +103,10 @@ fn build_hard_drive(esp_mount_point: &Path) -> EFIHardDrive {
     }
 }
 
-struct Generation {
-    id: u16,
-    ts: i64,
-}
-
-fn list_generations(mgr: &dyn VarManager) -> Vec<Generation> {
-    let mut gens: Vec<Generation> = mgr
-        .get_all_vars()
-        .unwrap_or_else(|e| die(format!("enumerating NVRAM variables: {e}")))
-        .filter_map(|var| {
-            let id = var.boot_var_id()?;
-            match BootEntry::read(mgr, &var) {
-                Ok(entry) => {
-                    let ts = finix_timestamp(&entry.description)?;
-                    Some(Generation { id, ts })
-                }
-                Err(e) => {
-                    eprintln!("finix-bootctl: warning: failed to parse boot entry {var:?}: {e}");
-                    None
-                }
-            }
-        })
-        .collect();
-
-    gens.sort_by_key(|b| std::cmp::Reverse(b.ts));
-    gens
-}
-
 fn cmd_list(mgr: &dyn VarManager) {
     for g in list_generations(mgr) {
         println!("{:04X} {}", g.id, g.ts);
     }
-}
-
-fn find_free_id(mgr: &dyn VarManager) -> u16 {
-    for id in 0u16..=0xFFFF {
-        let var = Variable::new(&format!("Boot{id:04X}"));
-        match mgr.exists(&var) {
-            Ok(false) => return id,
-            Ok(true) => continue,
-            Err(e) => die(format!("checking Boot{id:04X}: {e}")),
-        }
-    }
-    die("no free Boot#### slot left")
 }
 
 fn cmd_create(
@@ -198,40 +117,13 @@ fn cmd_create(
     timestamp: i64,
 ) {
     let hard_drive = build_hard_drive(Path::new(esp_mount_point));
-
-    let entry = BootEntry {
-        attributes: BootEntryAttributes::LOAD_OPTION_ACTIVE,
-        description: format!("{DESC_PREFIX}{timestamp}"),
-        file_path_list: Some(FilePathList {
-            file_path: FilePath {
-                path: loader_path.to_string(),
-            },
-            hard_drive,
-        }),
-        optional_data: optional_data
-            .encode_utf16()
-            .flat_map(|c| c.to_le_bytes())
-            .collect(),
-    };
-
-    let id = find_free_id(&*mgr);
-
-    mgr.add_boot_entry(id, entry)
-        .unwrap_or_else(|e| die(format!("creating boot entry Boot{id:04X}: {e}")));
-
-    // Re-sync BootOrder with the true set of Finix generations
-    let known_finix_ids: Vec<u16> = list_generations(&*mgr).into_iter().map(|g| g.id).collect();
-
-    let mut order = match mgr.get_boot_order() {
-        Ok(order) => order,
-        Err(EfiError::VarNotFound { .. }) => Vec::new(),
-        Err(e) => die(format!("reading BootOrder: {e}")),
-    };
-    order.retain(|x| !known_finix_ids.contains(x)); // keep non-Finix entries (USB, network, ...) as-is
-    order.splice(0..0, known_finix_ids);
-    mgr.set_boot_order(order)
-        .unwrap_or_else(|e| die(format!("writing BootOrder: {e}")));
-
+    let id = testtoolkit::cmd_create_with_hard_drive(
+        mgr,
+        hard_drive,
+        loader_path,
+        optional_data,
+        timestamp,
+    );
     println!("{id:04X}");
 }
 
