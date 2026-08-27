@@ -47,7 +47,7 @@
     network.openssh.permitRootLogin = "no";
 
     nix-ld.enable = true;
-    nyth.enable = true;
+    nyth.enable = false;
 
     nix-ld.libraries = with pkgs; [
       stdenv.cc.cc.lib

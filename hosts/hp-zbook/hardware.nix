@@ -66,8 +66,8 @@ in
   };
 
   programs.modprobe.blacklist = [
-    "fjes"
-    "spi_nor"
+#    "fjes"
+#    "spi_nor"
   ];
 
   # ── GPU: NVIDIA Quadro T2000 + Intel UHD 630 (Optimus) ─────────────────────

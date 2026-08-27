@@ -190,5 +190,6 @@ in
     "rootfstype=${rootFsType}"
     "zswap.enabled=0"
     "nvidia-drm.modeset=1"
+    "snd_intel_dspcfg.dsp_driver=1"
   ];
 }
