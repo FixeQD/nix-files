@@ -7,6 +7,11 @@
     finix.url = "github:FixeQD/finix";
     community-modules.url = "github:finix-community/community-modules";
 
+    efistubmgr = {
+      url = "github:finix-community/efistubmgr";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nixcord.url = "github:4evy/nixcord";
 
     nyth = {
@@ -52,6 +57,7 @@
       nyth,
       noctalia,
       nixcord,
+      efistubmgr,
       ...
     }:
     let
@@ -68,6 +74,9 @@
             overlays = [
               sops-nix.overlays.default
               (import ./pkgs)
+              (final: prev: {
+                efistubmgr = efistubmgr.packages.${system}.default;
+              })
             ];
           };
         in

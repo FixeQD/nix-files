@@ -22,129 +22,169 @@ let
 
   # ── EFISTUB install hook ───────────────────────────────────────────────────
 
-  efistubHook = pkgs.writeShellScript "efistub-install" ''
-    set -euo pipefail
+    efistubHook = pkgs.writeShellScript "efistub-install" ''
+      set -euo pipefail
 
-    BOOTSPEC="$1/boot.json"
-    BOOT_DIR="${efiMount}/EFI/nixos"
-    TIMESTAMP=$(${pkgs.coreutils}/bin/date +%s)
-    CURRENT_KERNEL="$BOOT_DIR/kernel-$TIMESTAMP.efi"
-    CURRENT_INITRD="$BOOT_DIR/initrd-$TIMESTAMP"
-    FINIX="${pkgs.finix-bootctl}/bin/finix-bootctl"
+      # ── Paths & metadata ──────────────────────────────────────────────────────
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Pre-flight validation
-    # ─────────────────────────────────────────────────────────────────────────
+      BOOTSPEC="$1/boot.json"
+      BOOT_DIR="${efiMount}/EFI/nixos"
+      EFISTUBMGR="${pkgs.efistubmgr}/bin/efistubmgr"
 
-    [ -r "$BOOTSPEC" ] || { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
-    [ -b "${bootDisk}" ] || { echo "ERROR: boot device not found: ${bootDisk}"; exit 1; }
+      TIMESTAMP=$(${pkgs.coreutils}/bin/date +%s)
+      HUMAN_DATE=$(
+        ${pkgs.coreutils}/bin/date -d "@$TIMESTAMP" '+%Y-%m-%d %H:%M:%S %Z'
+      )
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Extract boot parameters
-    # ─────────────────────────────────────────────────────────────────────────
+      KERNEL_PATH="$BOOT_DIR/kernel-$TIMESTAMP.efi"
+      INITRD_PATH="$BOOT_DIR/initrd-$TIMESTAMP"
 
-    KERNEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernel' "$BOOTSPEC")
-    INITRD=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".initrd' "$BOOTSPEC")
-    INIT=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".init' "$BOOTSPEC")
-    PARAMS=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernelParams | join(" ")' "$BOOTSPEC")
+      # ── Helpers ───────────────────────────────────────────────────────────────
 
-    [ -n "$KERNEL" ] || { echo "ERROR: kernel not found in boot.json"; exit 1; }
-    [ -n "$INITRD" ] || { echo "ERROR: initrd not found in boot.json"; exit 1; }
-    [ -n "$INIT" ]   || { echo "ERROR: init not found in boot.json"; exit 1; }
-    [ -f "$KERNEL" ] || { echo "ERROR: kernel file not found: $KERNEL"; exit 1; }
-    [ -f "$INITRD" ] || { echo "ERROR: initrd file not found: $INITRD"; exit 1; }
+      get_rev() {
+        local target="$1"
+        local path="$2"
+        local link
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Install kernel and initrd
-    # ─────────────────────────────────────────────────────────────────────────
+        for link in /nix/var/nix/profiles/system-*-link; do
+          [ -e "$link" ] || continue
 
-    mkdir -p "$BOOT_DIR"
+          case "$(readlink "$link")" in
+            "$target"|"$path")
+              printf '%s\n' "$link" |
+                ${pkgs.gnugrep}/bin/grep -oE 'system-[0-9]+-link' |
+                ${pkgs.gnugrep}/bin/grep -oE '[0-9]+' |
+                ${pkgs.gawk}/bin/awk '{print "rev. " $1}'
+              return
+              ;;
+          esac
+        done
+      }
 
-    echo "==> Installing kernel and initrd (timestamp: $TIMESTAMP)"
-    install -m 0644 "$KERNEL" "$CURRENT_KERNEL"
-    install -m 0644 "$INITRD" "$CURRENT_INITRD"
+      is_kept_timestamp() {
+        local needle="$1"
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Sign kernel if Secure Boot is enabled
-    # ─────────────────────────────────────────────────────────────────────────
+        for ts in "''${KEEP_TIMESTAMPS[@]}"; do
+          [ "$ts" = "$needle" ] && return 0
+        done
 
-    if [ -d /etc/secureboot/keys ]; then
-      echo "==> sbctl: signing kernel"
-      ${pkgs.sbctl}/bin/sbctl sign "$CURRENT_KERNEL" || \
-        echo "WARNING: sbctl signing failed, but continuing (Secure Boot may not work)"
-    fi
+        return 1
+      }
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Create new primary boot entry (finix-bootctl puts it first in BootOrder)
-    # ─────────────────────────────────────────────────────────────────────────
+      is_seen_timestamp() {
+        local needle="$1"
 
-    echo "==> Creating new primary entry (timestamp $TIMESTAMP)"
-    NEW_ID=$("$FINIX" create "${efiMount}" \
-      '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
-      "initrd=\EFI\nixos\initrd-$TIMESTAMP init=$INIT $PARAMS" \
-      "$TIMESTAMP")
-    echo "==> Created Boot$NEW_ID"
+        for ts in "''${ORPHAN_TIMESTAMPS[@]}"; do
+          [ "$ts" = "$needle" ] && return 0
+        done
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Prune old generations
-    # ─────────────────────────────────────────────────────────────────────────
+        return 1
+      }
 
-    mapfile -t GENERATIONS < <("$FINIX" list)   # lines: "<id-hex> <timestamp>", newest first
-    echo "==> ''${#GENERATIONS[@]} Finix generation(s) in NVRAM"
+      # ── Validate & read bootspec ──────────────────────────────────────────────
 
-    KEEP_TIMESTAMPS=()
-    for line in "''${GENERATIONS[@]:0:${toString keepGenerations}}"; do
-      KEEP_TIMESTAMPS+=("$(${pkgs.gawk}/bin/awk '{print $2}' <<<"$line")")
-    done
+      [ -r "$BOOTSPEC" ] ||
+        { echo "ERROR: boot.json not found at $BOOTSPEC"; exit 1; }
 
-    declare -A PRUNE_IDS
-    if [ "''${#GENERATIONS[@]}" -gt "${toString keepGenerations}" ]; then
-      for line in "''${GENERATIONS[@]:${toString keepGenerations}}"; do
-        id=$(${pkgs.gawk}/bin/awk '{print $1}' <<<"$line")
-        ts=$(${pkgs.gawk}/bin/awk '{print $2}' <<<"$line")
-        "$FINIX" delete "$id"
-        PRUNE_IDS["$ts"]="$id"
+      [ -b "${bootDisk}" ] ||
+        { echo "ERROR: boot device not found: ${bootDisk}"; exit 1; }
+
+      KERNEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernel' "$BOOTSPEC")
+      INITRD=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".initrd' "$BOOTSPEC")
+      INIT=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".init' "$BOOTSPEC")
+      PARAMS=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".kernelParams | join(" ")' "$BOOTSPEC")
+      LABEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".label // empty' "$BOOTSPEC")
+      TOPLEVEL=$(${pkgs.jq}/bin/jq -r '."org.nixos.bootspec.v1".toplevel // empty' "$BOOTSPEC")
+
+      [ -z "$LABEL" ] || [ "$LABEL" = "null" ] && LABEL="Finix"
+      [ -z "$TOPLEVEL" ] && TOPLEVEL="$1"
+
+      REV=$(get_rev "$TOPLEVEL" "$1")
+      DESCRIPTION="$LABEL''${REV:+ $REV} ❖ $HUMAN_DATE"
+
+      # ── Install kernel & initrd ───────────────────────────────────────────────
+
+      mkdir -p "$BOOT_DIR"
+
+      echo "==> Installing kernel and initrd (timestamp: $TIMESTAMP)"
+      install -m 0644 "$KERNEL" "$KERNEL_PATH"
+      install -m 0644 "$INITRD" "$INITRD_PATH"
+
+      # ── Secure Boot ───────────────────────────────────────────────────────────
+
+      if [ -d /etc/secureboot/keys ]; then
+        echo "==> sbctl: signing kernel"
+        ${pkgs.sbctl}/bin/sbctl sign "$KERNEL_PATH" || \
+          echo "WARNING: sbctl signing failed, but continuing (Secure Boot may not work)"
+      fi
+
+      # ── Create NVRAM entry ────────────────────────────────────────────────────
+
+      echo "==> Creating new primary entry: $DESCRIPTION (timestamp $TIMESTAMP)"
+
+      NEW_ID=$("$EFISTUBMGR" create "${efiMount}" \
+        '\EFI\nixos\kernel-'"$TIMESTAMP"'.efi' \
+        "$DESCRIPTION" \
+        "initrd=\EFI\nixos\initrd-$TIMESTAMP init=$INIT $PARAMS" \
+        --timestamp "$TIMESTAMP")
+
+      echo "==> Created Boot$NEW_ID"
+
+      # ── Keep newest generations ───────────────────────────────────────────────
+
+      mapfile -t GENERATIONS < <("$EFISTUBMGR" list)
+      echo "==> ''${#GENERATIONS[@]} finix generation(s) in NVRAM"
+
+      KEEP_TIMESTAMPS=()
+      for line in "''${GENERATIONS[@]:0:${toString keepGenerations}}"; do
+        KEEP_TIMESTAMPS+=(
+          "$(${pkgs.gawk}/bin/awk '{print $2}' <<<"$line")"
+        )
       done
-    fi
 
-    is_kept_timestamp() {
-      local needle="$1"
-      for ts in "''${KEEP_TIMESTAMPS[@]}"; do
-        [ "$ts" = "$needle" ] && return 0
+      declare -A PRUNE_IDS
+
+      if [ "''${#GENERATIONS[@]}" -gt "${toString keepGenerations}" ]; then
+        for line in "''${GENERATIONS[@]:${toString keepGenerations}}"; do
+          id=$(${pkgs.gawk}/bin/awk '{print $1}' <<<"$line")
+          ts=$(${pkgs.gawk}/bin/awk '{print $2}' <<<"$line")
+
+          "$EFISTUBMGR" delete "$id"
+          PRUNE_IDS["$ts"]="$id"
+        done
+      fi
+
+      # ── Remove orphaned ESP files ─────────────────────────────────────────────
+
+      ORPHAN_TIMESTAMPS=()
+
+      for f in "$BOOT_DIR"/kernel-*.efi "$BOOT_DIR"/initrd-*; do
+        [ -e "$f" ] || continue
+
+        base=$(basename "$f")
+        file_ts="''${base#*-}"
+        file_ts="''${file_ts%.efi}"
+
+        if ! is_kept_timestamp "$file_ts" &&
+           ! is_seen_timestamp "$file_ts"; then
+          ORPHAN_TIMESTAMPS+=("$file_ts")
+        fi
       done
-      return 1
-    }
 
-    is_seen_timestamp() {
-      local needle="$1"
       for ts in "''${ORPHAN_TIMESTAMPS[@]}"; do
-        [ "$ts" = "$needle" ] && return 0
+        if [ -n "''${PRUNE_IDS[$ts]:-}" ]; then
+          echo "==> Removing orphaned ESP files kernel-$ts.efi + initrd-$ts" \
+            "(ts $ts, removed matching Boot''${PRUNE_IDS[$ts]} NVRAM entry)"
+        else
+          echo "==> Removing orphaned ESP files kernel-$ts.efi + initrd-$ts" \
+            "(ts $ts, no matching NVRAM entry)"
+        fi
+
+        rm -f "$BOOT_DIR/kernel-$ts.efi" "$BOOT_DIR/initrd-$ts"
       done
-      return 1
-    }
 
-    ORPHAN_TIMESTAMPS=()
-    for f in "$BOOT_DIR"/kernel-*.efi "$BOOT_DIR"/initrd-*; do
-      [ -e "$f" ] || continue
-      base=$(basename "$f")
-      file_ts="''${base#*-}"
-      file_ts="''${file_ts%.efi}"
-      if ! is_kept_timestamp "$file_ts" && ! is_seen_timestamp "$file_ts"; then
-        ORPHAN_TIMESTAMPS+=("$file_ts")
-      fi
-    done
-
-    for ts in "''${ORPHAN_TIMESTAMPS[@]}"; do
-      if [ -n "''${PRUNE_IDS[$ts]:-}" ]; then
-        echo "==> Removing orphaned ESP files kernel-$ts.efi + initrd-$ts (ts $ts, removed matching Boot''${PRUNE_IDS[$ts]} NVRAM entry)"
-      else
-        echo "==> Removing orphaned ESP files kernel-$ts.efi + initrd-$ts (ts $ts, no matching NVRAM entry)"
-      fi
-      rm -f "$BOOT_DIR/kernel-$ts.efi" "$BOOT_DIR/initrd-$ts"
-    done
-
-    echo "==> EFISTUB setup complete"
-  '';
+      echo "==> EFISTUB setup complete"
+    '';
 in
 {
   boot.kernelPackages = pkgs.linuxPackages_zen;
