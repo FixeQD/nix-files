@@ -116,47 +116,38 @@
           ]
           ++ extraModules;
         };
+
+      mkInstallApp =
+        { hostname, resume ? false, requireSops ? true }:
+        let
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        in
+        {
+          type = "app";
+          program = toString (
+            pkgs.writeShellScript "${if resume then "resume-" else ""}install-${hostname}" ''
+              export DISKO_BIN="${disko.packages.x86_64-linux.disko}/bin/disko"
+              export SBCTL_BIN="${pkgs.sbctl}/bin/sbctl"
+              export MKPASSWD_BIN="${pkgs.mkpasswd}/bin/mkpasswd"
+              export FLAKE_HOST="${hostname}"
+              export PRIMARY_USER="fixeq"
+              export REQUIRE_SOPS="${if requireSops then "true" else "false"}"
+              ${if resume then ''export DISKO_MODE="mount"'' else ""}
+              source ${./install.sh}
+            ''
+          );
+        };
     in
     {
       nixosConfigurations = {
         hp-zbook = mkHost { hostname = "hp-zbook"; };
+        wifi-chan = mkHost { hostname = "wifi-chan"; };
       };
 
-      apps.x86_64-linux.install =
-        let
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        in
-        {
-          type = "app";
-          program = toString (
-            pkgs.writeShellScript "install-hp-zbook" ''
-              export DISKO_BIN="${disko.packages.x86_64-linux.disko}/bin/disko"
-              export SBCTL_BIN="${pkgs.sbctl}/bin/sbctl"
-              export MKPASSWD_BIN="${pkgs.mkpasswd}/bin/mkpasswd"
-              export FLAKE_HOST="hp-zbook"
-              export PRIMARY_USER="fixeq"
-              source ${./install.sh}
-            ''
-          );
-        };
+      apps.x86_64-linux.install = mkInstallApp { hostname = "hp-zbook"; };
+      apps.x86_64-linux.resume-install = mkInstallApp { hostname = "hp-zbook"; resume = true; };
 
-      apps.x86_64-linux.resume-install =
-        let
-          pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        in
-        {
-          type = "app";
-          program = toString (
-            pkgs.writeShellScript "resume-install-hp-zbook" ''
-              export DISKO_BIN="${disko.packages.x86_64-linux.disko}/bin/disko"
-              export SBCTL_BIN="${pkgs.sbctl}/bin/sbctl"
-              export MKPASSWD_BIN="${pkgs.mkpasswd}/bin/mkpasswd"
-              export FLAKE_HOST="hp-zbook"
-              export PRIMARY_USER="fixeq"
-              export DISKO_MODE="mount"
-              source ${./install.sh}
-            ''
-          );
-        };
+      apps.x86_64-linux.install-wifi-chan = mkInstallApp { hostname = "wifi-chan"; requireSops = false; };
+      apps.x86_64-linux.resume-install-wifi-chan = mkInstallApp { hostname = "wifi-chan"; resume = true; requireSops = false; };
     };
 }
