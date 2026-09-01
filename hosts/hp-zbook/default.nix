@@ -25,7 +25,7 @@
     ../../modules/services/secrets.nix
     ../../modules/services/yggdrasil.nix
     ../../modules/services/ollama.nix
-    ../../modules/firewall
+    ../../modules/firewall/default.nix
   ];
 
   networking.hostName = "HP-ZBook";

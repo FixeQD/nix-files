@@ -13,7 +13,7 @@
     ../../modules/minimal/user.nix
     ../../modules/minimal/mdevd.nix
     ../../modules/services/adguardhome.nix
-    ../../modules/firewall
+    ../../modules/firewall/default.nix
   ];
 
   networking.hostName = "wifi-chan";
