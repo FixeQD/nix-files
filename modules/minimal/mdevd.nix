@@ -7,8 +7,6 @@ let cfg = config.modules.mdevd; in
   config = mkIf cfg.enable {
     services.mdevd = {
       enable = true;
-
-      # Rebroadcast kernel uevents to netlink group 4 so that libudev-zero consumers can see device events
       nlgroups = 4;
     };
 

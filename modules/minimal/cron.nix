@@ -16,11 +16,7 @@ let cfg = config.modules.cron; in
       "cron.d/btrfs-scrub".text = ''
         @monthly root ${pkgs.btrfs-progs}/bin/btrfs scrub start -B /
       '';
-/*
-      "cron.d/btrfs-prune-old-roots".text = ''
-        0 4 * * 0 root ${pkgs.bash}/bin/bash ${../scripts/btrfs-prune-old-roots.sh} ${config.fileSystems."/".device}
-      '';
-*/
+
       "cron.d/fstrim".text = ''
         @monthly root ${pkgs.util-linux}/bin/fstrim -av
       '';

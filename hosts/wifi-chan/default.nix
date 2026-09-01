@@ -3,15 +3,16 @@
   imports = [
     ./hardware.nix
     ./boot.nix
-    ../../modules/base.nix
-    ../../modules/locale.nix
-    ../../modules/network.nix
-    ../../modules/cron.nix
-    ../../modules/performance.nix
-    ../../modules/zram.nix
-    ../../modules/security.nix
-    ../../modules/user.nix
-    ../../modules/mdevd.nix
+
+    ../../modules/minimal/base.nix
+    ../../modules/minimal/locale.nix
+    ../../modules/minimal/network.nix
+    ../../modules/minimal/cron.nix
+    ../../modules/minimal/performance.nix
+    ../../modules/minimal/zram.nix
+    ../../modules/minimal/security.nix
+    ../../modules/minimal/user.nix
+    ../../modules/minimal/mdevd.nix
   ];
 
   networking.hostName = "wifi-chan";

@@ -3,26 +3,29 @@
   imports = [
     ./hardware.nix
     ./boot.nix
-    ../../modules/base.nix
-    ../../modules/fonts.nix
-    ../../modules/locale.nix
-    ../../modules/network.nix
-    ../../modules/cron.nix
-    ../../modules/cloudflared.nix
-    ../../modules/performance.nix
-    ../../modules/zram.nix
-    ../../modules/audio.nix
-    ../../modules/desktop.nix
-    ../../modules/security.nix
-    ../../modules/secrets.nix
-    ../../modules/user.nix
-    ../../modules/virt.nix
-    ../../modules/bluetooth.nix
-    ../../modules/yggdrasil.nix
-    ../../modules/mdevd.nix
-    ../../modules/nix-ld.nix
-    ../../modules/nyth.nix
-    ../../modules/ollama.nix
+
+    ../../modules/minimal/base.nix
+    ../../modules/minimal/locale.nix
+    ../../modules/minimal/network.nix
+    ../../modules/minimal/cron.nix
+    ../../modules/minimal/performance.nix
+    ../../modules/minimal/zram.nix
+    ../../modules/minimal/security.nix
+    ../../modules/minimal/user.nix
+    ../../modules/minimal/mdevd.nix
+
+    ../../modules/desktop/fonts.nix
+    ../../modules/desktop/audio.nix
+    ../../modules/desktop/desktop.nix
+    ../../modules/desktop/bluetooth.nix
+    ../../modules/desktop/nix-ld.nix
+    ../../modules/desktop/nyth.nix
+    ../../modules/desktop/virt.nix
+
+    ../../modules/services/cloudflared.nix
+    ../../modules/services/secrets.nix
+    ../../modules/services/yggdrasil.nix
+    ../../modules/services/ollama.nix
   ];
 
   networking.hostName = "HP-ZBook";

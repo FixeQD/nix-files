@@ -4,7 +4,7 @@ let
 in
 {
   sops.age.keyFile = "/etc/sops/age/keys.txt";
-  sops.defaultSopsFile = ../home/secrets.yaml;
+  sops.defaultSopsFile = ../../home/secrets.yaml;
 
   environment.systemPackages = [ pkgs.sops ];
 
