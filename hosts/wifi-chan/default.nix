@@ -10,9 +10,10 @@
     ../../modules/minimal/cron.nix
     ../../modules/minimal/performance.nix
     ../../modules/minimal/zram.nix
-    ../../modules/minimal/security.nix
     ../../modules/minimal/user.nix
     ../../modules/minimal/mdevd.nix
+    ../../modules/services/adguardhome.nix
+    ../../modules/firewall
   ];
 
   networking.hostName = "wifi-chan";
@@ -27,17 +28,32 @@
     network.enable = true;
     network.openssh.enable = true;
     network.openssh.permitRootLogin = "no";
-    
     network.tailscale.enable = true;
-    security.trustedInterfaces = [ "tailscale0" ];
 
     cron.enable = true;
     performance.enable = true;
-    security.enable = true;
+    firewall.enable = true;
+    firewall.trustedInterfaces = [ "tailscale0" ];
     zram.enable = true;
 
     user.enable = true;
     user.name = "fixeq";
+
+    adguardhome = {
+      enable = true;
+      port = 3000;
+      settings = {
+        dns.upstream_dns = [
+          "9.9.9.9#dns.quad9.net"
+          "149.112.112.112#dns.quad9.net"
+        ];
+        filtering = {
+          protection_enabled = true;
+          filtering_enabled = true;
+          parental_enabled = false;
+        };
+      };
+    };
   };
 
   networking.hosts = {

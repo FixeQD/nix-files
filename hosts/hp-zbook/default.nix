@@ -10,7 +10,6 @@
     ../../modules/minimal/cron.nix
     ../../modules/minimal/performance.nix
     ../../modules/minimal/zram.nix
-    ../../modules/minimal/security.nix
     ../../modules/minimal/user.nix
     ../../modules/minimal/mdevd.nix
 
@@ -26,6 +25,7 @@
     ../../modules/services/secrets.nix
     ../../modules/services/yggdrasil.nix
     ../../modules/services/ollama.nix
+    ../../modules/firewall
   ];
 
   networking.hostName = "HP-ZBook";
@@ -73,7 +73,7 @@
     ];
 
     performance.enable = true;
-    security.enable = true;
+    firewall.enable = true;
     user.enable = true;
     user.name = "fixeq";
     virt.enable = true;
