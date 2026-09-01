@@ -27,6 +27,9 @@
     network.enable = true;
     network.openssh.enable = true;
     network.openssh.permitRootLogin = "no";
+    
+    network.tailscale.enable = true;
+    security.trustedInterfaces = [ "tailscale0" ];
 
     cron.enable = true;
     performance.enable = true;

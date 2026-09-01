@@ -2,7 +2,16 @@
 with lib;
 let cfg = config.modules.security; in
 {
-  options.modules.security.enable = mkEnableOption "nftables firewall (default deny inbound)";
+  options.modules.security = {
+    enable = mkEnableOption "nftables firewall (default deny inbound)";
+
+    trustedInterfaces = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      example = [ "tailscale0" ];
+      description = "Interfaces whose inbound traffic is fully trusted, bypassing all firewall filtering (e.g. tailscale0 for Tailscale).";
+    };
+  };
 
   config = mkIf cfg.enable {
     environment.etc."nftables.conf".text = ''
@@ -13,6 +22,7 @@ let cfg = config.modules.security; in
           type filter hook input priority 0; policy drop;
 
           iif "lo" accept
+          ${concatMapStringsSep "\n          " (iface: ''iif "${iface}" accept'') cfg.trustedInterfaces}
           ct state established,related accept
           ct state invalid drop
 
