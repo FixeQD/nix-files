@@ -12,7 +12,7 @@
     ../../modules/minimal/zram.nix
     ../../modules/minimal/user.nix
     ../../modules/minimal/mdevd.nix
-    ../../modules/services/adguardhome.nix
+    ../../modules/services/pihole.nix
     ../../modules/firewall/default.nix
   ];
 
@@ -39,19 +39,14 @@
     user.enable = true;
     user.name = "fixeq";
 
-    adguardhome = {
-      enable = true;
-      port = 3000;
+    pihole = {
+    		enable = true;
+      port = 2137;
       settings = {
-        dns.upstream_dns = [
-          "9.9.9.9#dns.quad9.net"
-          "149.112.112.112#dns.quad9.net"
+        dns.upstreams = [
+          "9.9.9.9"
+          "149.112.112.112"
         ];
-        filtering = {
-          protection_enabled = true;
-          filtering_enabled = true;
-          parental_enabled = false;
-        };
       };
     };
   };
